@@ -15,7 +15,7 @@ NOM_REPO = "mes-cours-l1"
 MODE_MAINTENANCE = False
 
 # 🔓 LE BOUTON MOT DE PASSE (True = Code requis / False = Accès direct)
-MOT_DE_PASSE_ACTIF = True
+MOT_DE_PASSE_ACTIF = False
 
 # ⚠️  SÉCURITÉ : Identifiant global requis (les mots de passe sont calculés dynamiquement dans le JS)
 IDENTIFIANT_REQUIS = "IAD2026"
