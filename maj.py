@@ -12,10 +12,10 @@ NOM_SIGNATURE_MAINTENANCE = "Farhan&Co"
 NOM_REPO = "mes-cours-l1"
 
 # 🛑 LE BOUTON MAINTENANCE (True = Fermé avec panneau / False = Ouvert)
-MODE_MAINTENANCE = True
+MODE_MAINTENANCE = False
 
 # 🔓 LE BOUTON MOT DE PASSE (True = Code requis / False = Accès direct)
-MOT_DE_PASSE_ACTIF = False
+MOT_DE_PASSE_ACTIF = True
 
 # ⚠️  SÉCURITÉ : Identifiant global requis (les mots de passe sont calculés dynamiquement dans le JS)
 IDENTIFIANT_REQUIS = "IAD2026"
