@@ -88,11 +88,10 @@ noms_matieres = {
 extensions_valides = (
     '.pdf', '.doc', '.docx', '.ppt', '.pptx', '.xls', '.xlsx',
     '.txt', '.png', '.jpg', '.jpeg', '.zip', '.rar',
-    '.c', '.cpp', '.py', '.java', '.html', '.css', '.js'
+    '.c', '.cpp', '.py', '.java', '.html', '.css', '.js', '.heic', '.HEIC'
 )
 
 # Mots-clés qui identifient un dossier "Sujet d'entraînement"
-# Toutes les variantes de noms que tu utilises
 KEYWORDS_SUJET = [
     "sujet entrainement", "sujet entraînement",
     "sujet_entrainement", "sujet_entraînement",
@@ -146,6 +145,13 @@ if MODE_MAINTENANCE:
         footer {{ text-align: center; padding: 30px; font-size: 1rem; color: #64748b; margin-top: auto; }}
         .boss-name {{ color: var(--primary); font-weight: 900; font-size: 1.2rem; }}
     </style>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-PWQN6WBSV4"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){{dataLayer.push(arguments);}}
+      gtag('js', new Date());
+      gtag('config', 'G-PWQN6WBSV4');
+    </script>
 </head>
 <body>
     <header>
@@ -406,10 +412,16 @@ else:
 
         body::after {{ content: "🌙"; position: fixed; top: 20px; right: 20px; font-size: 2.5rem; opacity: 0.8; pointer-events: none; z-index: 1000; }}
     </style>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-PWQN6WBSV4"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){{dataLayer.push(arguments);}}
+      gtag('js', new Date());
+      gtag('config', 'G-PWQN6WBSV4');
+    </script>
 </head>
 <body>
 
-<!-- LOGIN -->
 <div id="login-screen">
     <div class="login-box">
         <h2>🔒 Accès Privé</h2>
@@ -422,7 +434,6 @@ else:
     </div>
 </div>
 
-<!-- CONTENU PRINCIPAL -->
 <div id="main-content">
     <header>
         <h1>🎓 Drive Universitaire</h1>
@@ -430,7 +441,6 @@ else:
         {ramadan_html}
     </header>
 
-    <!-- Fil d'Ariane -->
     <div class="breadcrumb" id="breadcrumb">
         <span class="bc-item link" onclick="goHome()">🏠 Accueil</span>
         <span class="bc-sep" id="sep1" style="display:none">›</span>
@@ -440,19 +450,16 @@ else:
         <button class="btn-retour" onclick="goBack()">← Retour</button>
     </div>
 
-    <!-- ÉCRAN 1 : Années -->
     <div class="screen active" id="screen-annees">
         <p class="screen-title">Choisissez une <span>année</span> :</p>
         {ecran_annees_html}
     </div>
 
-    <!-- ÉCRAN 2 : Filières -->
     <div class="screen" id="screen-filieres">
         <p class="screen-title">Choisissez une <span>filière</span> :</p>
         <div class="nav-grid" id="filieres-grid"></div>
     </div>
 
-    <!-- ÉCRAN 3 : Matières -->
     <div class="screen" id="screen-matieres">
         <div class="filters">
             <div class="search-container">
@@ -682,12 +689,13 @@ print("✅ index.html généré avec succès !")
 try:
     subprocess.run(["git", "add", "."], check=True)
 
+    # Note pour forcer la mise à jour : j'ai rajouté "Avec Analytics" 
     if MODE_MAINTENANCE:
-        message_commit = "🚧 Mise en maintenance du site"
+        message_commit = "🚧 Mise en maintenance du site (Avec Analytics 📈)"
     elif MOT_DE_PASSE_ACTIF:
-        message_commit = f"🔒 Mise à jour du drive (accès protégé) - {date_maj}"
+        message_commit = f"🔒 Mise à jour du drive (accès protégé) - {date_maj} (Avec Analytics 📈)"
     else:
-        message_commit = f"📚 Mise à jour du drive - {date_maj}"
+        message_commit = f"📚 Mise à jour du drive - {date_maj} (Avec Analytics 📈)"
 
     subprocess.run(["git", "commit", "-m", message_commit], check=True)
     subprocess.run(["git", "push", "origin", "main"], check=True)

@@ -117,10 +117,16 @@
 
         body::after { content: "🌙"; position: fixed; top: 20px; right: 20px; font-size: 2.5rem; opacity: 0.8; pointer-events: none; z-index: 1000; }
     </style>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-PWQN6WBSV4"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-PWQN6WBSV4');
+    </script>
 </head>
 <body>
 
-<!-- LOGIN -->
 <div id="login-screen">
     <div class="login-box">
         <h2>🔒 Accès Privé</h2>
@@ -133,7 +139,6 @@
     </div>
 </div>
 
-<!-- CONTENU PRINCIPAL -->
 <div id="main-content">
     <header>
         <h1>🎓 Drive Universitaire</h1>
@@ -141,7 +146,6 @@
         <div class="ramadan-message">🌙 Ramadan Mubarak ! ✨</div>
     </header>
 
-    <!-- Fil d'Ariane -->
     <div class="breadcrumb" id="breadcrumb">
         <span class="bc-item link" onclick="goHome()">🏠 Accueil</span>
         <span class="bc-sep" id="sep1" style="display:none">›</span>
@@ -151,7 +155,6 @@
         <button class="btn-retour" onclick="goBack()">← Retour</button>
     </div>
 
-    <!-- ÉCRAN 1 : Années -->
     <div class="screen active" id="screen-annees">
         <p class="screen-title">Choisissez une <span>année</span> :</p>
         <div class="nav-grid">
@@ -172,13 +175,11 @@
         </div></div>
     </div>
 
-    <!-- ÉCRAN 2 : Filières -->
     <div class="screen" id="screen-filieres">
         <p class="screen-title">Choisissez une <span>filière</span> :</p>
         <div class="nav-grid" id="filieres-grid"></div>
     </div>
 
-    <!-- ÉCRAN 3 : Matières -->
     <div class="screen" id="screen-matieres">
         <div class="filters">
             <div class="search-container">
@@ -210,7 +211,7 @@
 
     <button id="backToTop" title="Retour en haut">↑</button>
     <footer>
-        Dernière mise à jour : <b>22/02/2026 à 01:59</b><br>
+        Dernière mise à jour : <b>22/02/2026 à 17:30</b><br>
         By <span class="boss-name">Farhan Abdoul-Mougni Farhan</span>
         <div class="copyright">
             © 2026 Farhan Abdoul-Mougni Farhan — Tous droits réservés.<br>
