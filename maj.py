@@ -4,6 +4,17 @@ import datetime
 import json
 
 # ==========================================
+# 🔄 0. SYNCHRONISATION AUTOMATIQUE (Astuce Pro)
+# ==========================================
+print("🔄 Vérification du Cloud (récupération des fichiers de l'iPad)...")
+try:
+    # Le Mac télécharge automatiquement les nouveautés avant de travailler
+    subprocess.run(["git", "pull", "--rebase", "origin", "main"], check=True)
+    print("✅ Mac parfaitement synchronisé avec le Cloud !")
+except subprocess.CalledProcessError:
+    print("⚠️ Impossible de synchroniser (Pas d'internet ou conflit mineur). On continue !")
+
+# ==========================================
 # ⚙️ 1. PARAMÈTRES GÉNÉRAUX ET INTERRUPTEURS
 # ==========================================
 NOM_UTILISATEUR = "Fvrhnzerr"
@@ -17,8 +28,9 @@ MODE_MAINTENANCE = False
 # 🔓 LE BOUTON MOT DE PASSE (True = Code requis / False = Accès direct)
 MOT_DE_PASSE_ACTIF = False
 
-# ⚠️  SÉCURITÉ : Identifiant global requis (les mots de passe sont calculés dynamiquement dans le JS)
-IDENTIFIANT_REQUIS = "IAD2026"
+# ⚠️  SÉCURITÉ : Le mot de passe ci-dessous est VISIBLE dans le HTML généré.
+LOGIN_REQUIS = "L1GI"
+MDP_REQUIS = "IAD2026"
 
 # ==========================================
 # 📁 2. CONFIGURATION DES DOSSIERS
@@ -36,35 +48,27 @@ noms_annees = {
 }
 
 noms_matieres = {
-    # Algèbre
     "algebre_lineaire":          "📐 Algèbre Linéaire",
     "algebre lineaire":          "📐 Algèbre Linéaire",
     "Algèbre lineaire":          "📐 Algèbre Linéaire",
     "Algèbre linéaire":          "📐 Algèbre Linéaire",
     "algebre":                   "📐 Algèbre Linéaire",
-    # Algorithme
     "algo_avancee":              "🧬 Algorithme Avancée",
     "algo avancee":              "🧬 Algorithme Avancée",
     "algorithme_avance":         "🧬 Algorithme Avancée",
     "Algo":                      "🧬 Algorithmique",
     "algo":                      "🧬 Algorithmique",
-    # Système d'exploitation
     "system_exploitation":       "💻 Système d'Exploitation",
     "systeme_exploitation":      "💻 Système d'Exploitation",
-    # Web
     "web":                       "🌐 Développement Web",
     "dev_web":                   "🌐 Développement Web",
-    # Système logique
     "system_logique":            "🔢 Système Logique",
     "systeme_logique":           "🔢 Système Logique",
-    # CISCO
     "cisco":                     "📡 CISCO",
     "CISCO":                     "📡 CISCO",
-    # Français
     "francais":                  "📚 Français",
     "Francais":                  "📚 Français",
     "français":                  "📚 Français",
-    # Nouvelles matières S1
     "Réseau":                    "🌐 Réseau",
     "reseau":                    "🌐 Réseau",
     "réseau":                    "🌐 Réseau",
@@ -90,7 +94,6 @@ extensions_valides = (
     '.c', '.cpp', '.py', '.java', '.html', '.css', '.js', '.heic', '.HEIC'
 )
 
-# Mots-clés qui identifient un dossier "Sujet d'entraînement"
 KEYWORDS_SUJET = [
     "sujet entrainement", "sujet entraînement",
     "sujet_entrainement", "sujet_entraînement",
@@ -101,7 +104,6 @@ KEYWORDS_SUJET = [
 ]
 
 def est_dossier_sujet(chemin):
-    """Retourne True si le dossier est un dossier de sujets d'entraînement."""
     nom = os.path.basename(chemin).lower().strip()
     for kw in KEYWORDS_SUJET:
         if kw in nom:
@@ -192,7 +194,7 @@ else:
                     fichiers_cours  = ""
                     fichiers_td     = ""
                     fichiers_tp     = ""
-                    fichiers_sujets = ""
+                    fichiers_sujets = ""  
 
                     for racine, dirs, fichiers in os.walk(chemin_matiere):
                         for fichier in sorted(fichiers):
@@ -233,7 +235,7 @@ else:
                         "cours":  fichiers_cours,
                         "td":     fichiers_td,
                         "tp":     fichiers_tp,
-                        "sujets": fichiers_sujets,
+                        "sujets": fichiers_sujets,  
                     }
 
     cartes_html = ""
@@ -319,8 +321,7 @@ else:
         .login-box {{ background: var(--card); padding: 40px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); border: 1px solid var(--border); text-align: center; max-width: 350px; width: 90%; }}
         .login-box h2 {{ color: var(--primary); margin-top: 0; font-size: 1.8rem; margin-bottom: 5px; }}
         .login-box p {{ color: #64748b; font-size: 0.9rem; margin-bottom: 25px; }}
-        .login-box input {{ width: 100%; padding: 12px; margin-bottom: 15px; border: 2px solid var(--border); border-radius: 8px; background: var(--bg); color: var(--text); outline: none; transition: 0.2s; text-transform: uppercase; }}
-        .login-box input::placeholder {{ text-transform: none; }}
+        .login-box input {{ width: 100%; padding: 12px; margin-bottom: 15px; border: 2px solid var(--border); border-radius: 8px; background: var(--bg); color: var(--text); outline: none; transition: 0.2s; }}
         .login-box input:focus {{ border-color: var(--primary); }}
         .login-box button {{ width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 1rem; font-weight: bold; cursor: pointer; transition: 0.2s; }}
         .login-box button:hover {{ transform: translateY(-2px); box-shadow: 0 5px 15px rgba(212,175,55,0.4); }}
@@ -423,11 +424,11 @@ else:
     <div class="login-box">
         <h2>🔒 Accès Privé</h2>
         <p>Entrez vos identifiants pour accéder au Drive.</p>
-        <input type="text" id="username" placeholder="Identifiant (ex: IAD2026)" autocomplete="off">
-        <input type="password" id="password" placeholder="Mot de passe (ex: L1GI)">
+        <input type="text" id="username" placeholder="Identifiant" autocomplete="off">
+        <input type="password" id="password" placeholder="Mot de passe">
         <button onclick="verifierLogin()">Se connecter</button>
         <p id="login-error">❌ Identifiant ou mot de passe incorrect.</p>
-        <p class="login-warning">⚠️ Chaque filière possède son propre mot de passe (L1GI, L2GE, L3MRT...)</p>
+        <p class="login-warning">⚠️ Protection basique — ne pas partager pour des documents confidentiels.</p>
     </div>
 </div>
 
@@ -475,7 +476,6 @@ else:
 
     <button id="backToTop" title="Retour en haut">↑</button>
     <footer>
-        Dernière mise à jour : <b>{date_maj}</b><br>
         By <span class="boss-name">{NOM_SIGNATURE_NORMAL}</span>
         <div class="copyright">
             © {maintenant.year} {NOM_SIGNATURE_NORMAL} — Tous droits réservés.<br>
@@ -495,26 +495,11 @@ let navHistory     = [];
 
 // ── LOGIN ──────────────────────────────────────────────────────────────
 function verifierLogin() {{
-    var user = document.getElementById("username").value.trim().toUpperCase();
-    var pass = document.getElementById("password").value.trim().toUpperCase();
-    
-    // Le format attendu pour le mot de passe est L(1, 2 ou 3) suivi de GI, GE ou MRT
-    var regexMdp = /^(L[123])(GI|GE|MRT)$/;
-    var match = pass.match(regexMdp);
-
-    if (user === "{IDENTIFIANT_REQUIS}" && match) {{
-        var anneeClass = match[1];   // Ex: L1
-        var filiereClass = match[2]; // Ex: GI
-        
+    var user = document.getElementById("username").value;
+    var pass = document.getElementById("password").value;
+    if (user === "{LOGIN_REQUIS}" && pass === "{MDP_REQUIS}") {{
         sessionStorage.setItem("driveAutorise", "oui");
-        sessionStorage.setItem("driveAnnee", anneeClass);
-        sessionStorage.setItem("driveFiliere", filiereClass);
-        
         afficherSite();
-        
-        // Redirection directe vers la classe de l'étudiant !
-        setTimeout(() => {{ goMatieres(anneeClass, filiereClass); }}, 100);
-        
     }} else {{
         document.getElementById("login-error").style.display = "block";
         var box = document.querySelector(".login-box");
@@ -523,23 +508,13 @@ function verifierLogin() {{
         setTimeout(() => box.style.transform = "translateX(0)", 200);
     }}
 }}
-
 function afficherSite() {{
     document.getElementById("login-screen").style.display = "none";
     document.getElementById("main-content").style.display = "block";
 }}
-
 if ("{MOT_DE_PASSE_ACTIF}" === "False" || sessionStorage.getItem("driveAutorise") === "oui") {{
     afficherSite();
-    
-    // Si l'utilisateur est déjà connecté, on le redirige sur sa filière (s'il vient d'arriver)
-    var savedAnnee = sessionStorage.getItem("driveAnnee");
-    var savedFiliere = sessionStorage.getItem("driveFiliere");
-    if(savedAnnee && savedFiliere && navHistory.length === 0) {{
-         setTimeout(() => {{ goMatieres(savedAnnee, savedFiliere); }}, 50);
-    }}
 }}
-
 document.getElementById("password").addEventListener("keypress", e => {{
     if (e.key === "Enter") verifierLogin();
 }});
@@ -712,11 +687,11 @@ try:
     subprocess.run(["git", "add", "."], check=True)
 
     if MODE_MAINTENANCE:
-        message_commit = "🚧 Mise en maintenance du site (Avec Analytics 📈)"
+        message_commit = "🚧 Mise en maintenance du site (Avec Auto-Sync 🔄)"
     elif MOT_DE_PASSE_ACTIF:
-        message_commit = f"🔒 Mise à jour du drive (accès protégé par filière) - {date_maj} (Avec Analytics 📈)"
+        message_commit = f"🔒 Mise à jour du drive (accès protégé) - {date_maj} (Avec Auto-Sync 🔄)"
     else:
-        message_commit = f"📚 Mise à jour du drive - {date_maj} (Avec Analytics 📈)"
+        message_commit = f"📚 Mise à jour du drive - {date_maj} (Avec Auto-Sync 🔄)"
 
     subprocess.run(["git", "commit", "-m", message_commit], check=True)
     subprocess.run(["git", "push", "origin", "main"], check=True)
@@ -724,7 +699,7 @@ try:
     if MODE_MAINTENANCE:
         print("🚧 LE SITE EST FERMÉ ! (Mode maintenance actif)")
     else:
-        print(f"🌍 SITE EN LIGNE ! | Mot de passe : {'✅ Activé (Par filière)' if MOT_DE_PASSE_ACTIF else '🔓 Désactivé'} | {total_fichiers} fichiers indexés")
+        print(f"🌍 SITE EN LIGNE ! | Mot de passe : {'✅ Activé' if MOT_DE_PASSE_ACTIF else '🔓 Désactivé'} | {total_fichiers} fichiers indexés")
 
 except Exception as e:
     print(f"⚠️  Git : {e}")

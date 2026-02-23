@@ -28,8 +28,7 @@
         .login-box { background: var(--card); padding: 40px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); border: 1px solid var(--border); text-align: center; max-width: 350px; width: 90%; }
         .login-box h2 { color: var(--primary); margin-top: 0; font-size: 1.8rem; margin-bottom: 5px; }
         .login-box p { color: #64748b; font-size: 0.9rem; margin-bottom: 25px; }
-        .login-box input { width: 100%; padding: 12px; margin-bottom: 15px; border: 2px solid var(--border); border-radius: 8px; background: var(--bg); color: var(--text); outline: none; transition: 0.2s; text-transform: uppercase; }
-        .login-box input::placeholder { text-transform: none; }
+        .login-box input { width: 100%; padding: 12px; margin-bottom: 15px; border: 2px solid var(--border); border-radius: 8px; background: var(--bg); color: var(--text); outline: none; transition: 0.2s; }
         .login-box input:focus { border-color: var(--primary); }
         .login-box button { width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 1rem; font-weight: bold; cursor: pointer; transition: 0.2s; }
         .login-box button:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(212,175,55,0.4); }
@@ -132,11 +131,11 @@
     <div class="login-box">
         <h2>🔒 Accès Privé</h2>
         <p>Entrez vos identifiants pour accéder au Drive.</p>
-        <input type="text" id="username" placeholder="Identifiant (ex: IAD2026)" autocomplete="off">
-        <input type="password" id="password" placeholder="Mot de passe (ex: L1GI)">
+        <input type="text" id="username" placeholder="Identifiant" autocomplete="off">
+        <input type="password" id="password" placeholder="Mot de passe">
         <button onclick="verifierLogin()">Se connecter</button>
         <p id="login-error">❌ Identifiant ou mot de passe incorrect.</p>
-        <p class="login-warning">⚠️ Chaque filière possède son propre mot de passe (L1GI, L2GE, L3MRT...)</p>
+        <p class="login-warning">⚠️ Protection basique — ne pas partager pour des documents confidentiels.</p>
     </div>
 </div>
 
@@ -223,7 +222,6 @@
 
     <button id="backToTop" title="Retour en haut">↑</button>
     <footer>
-        Dernière mise à jour : <b>23/02/2026 à 04:00</b><br>
         By <span class="boss-name">Farhan Abdoul-Mougni Farhan</span>
         <div class="copyright">
             © 2026 Farhan Abdoul-Mougni Farhan — Tous droits réservés.<br>
@@ -243,26 +241,11 @@ let navHistory     = [];
 
 // ── LOGIN ──────────────────────────────────────────────────────────────
 function verifierLogin() {
-    var user = document.getElementById("username").value.trim().toUpperCase();
-    var pass = document.getElementById("password").value.trim().toUpperCase();
-    
-    // Le format attendu pour le mot de passe est L(1, 2 ou 3) suivi de GI, GE ou MRT
-    var regexMdp = /^(L[123])(GI|GE|MRT)$/;
-    var match = pass.match(regexMdp);
-
-    if (user === "IAD2026" && match) {
-        var anneeClass = match[1];   // Ex: L1
-        var filiereClass = match[2]; // Ex: GI
-        
+    var user = document.getElementById("username").value;
+    var pass = document.getElementById("password").value;
+    if (user === "L1GI" && pass === "IAD2026") {
         sessionStorage.setItem("driveAutorise", "oui");
-        sessionStorage.setItem("driveAnnee", anneeClass);
-        sessionStorage.setItem("driveFiliere", filiereClass);
-        
         afficherSite();
-        
-        // Redirection directe vers la classe de l'étudiant !
-        setTimeout(() => { goMatieres(anneeClass, filiereClass); }, 100);
-        
     } else {
         document.getElementById("login-error").style.display = "block";
         var box = document.querySelector(".login-box");
@@ -271,23 +254,13 @@ function verifierLogin() {
         setTimeout(() => box.style.transform = "translateX(0)", 200);
     }
 }
-
 function afficherSite() {
     document.getElementById("login-screen").style.display = "none";
     document.getElementById("main-content").style.display = "block";
 }
-
 if ("False" === "False" || sessionStorage.getItem("driveAutorise") === "oui") {
     afficherSite();
-    
-    // Si l'utilisateur est déjà connecté, on le redirige sur sa filière (s'il vient d'arriver)
-    var savedAnnee = sessionStorage.getItem("driveAnnee");
-    var savedFiliere = sessionStorage.getItem("driveFiliere");
-    if(savedAnnee && savedFiliere && navHistory.length === 0) {
-         setTimeout(() => { goMatieres(savedAnnee, savedFiliere); }, 50);
-    }
 }
-
 document.getElementById("password").addEventListener("keypress", e => {
     if (e.key === "Enter") verifierLogin();
 });
