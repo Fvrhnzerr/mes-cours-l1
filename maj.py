@@ -4,23 +4,29 @@ import datetime
 import json
 
 # ==========================================
-# 🔄 0. SYNCHRONISATION AUTOMATIQUE (Astuce Pro)
+# 🔄 0. SYNCHRONISATION AUTOMATIQUE
 # ==========================================
 print("🔄 Vérification du Cloud (récupération des fichiers de l'iPad)...")
 try:
-    # Le Mac télécharge automatiquement les nouveautés avant de travailler
-    subprocess.run(["git", "pull", "--rebase", "origin", "main"], check=True)
+    # S'assurer qu'on est bien sur main (corrige le detached HEAD)
+    subprocess.run(["git", "checkout", "main"], check=True, capture_output=True)
+    # Mettre de côté les changements locaux pour pouvoir puller proprement
+    subprocess.run(["git", "stash"], check=True, capture_output=True)
+    # Récupérer les nouveaux fichiers de l'iPad
+    subprocess.run(["git", "pull", "--rebase", "origin", "main"], check=True, capture_output=True, text=True)
+    # Remettre les changements locaux par-dessus
+    subprocess.run(["git", "stash", "pop"], capture_output=True)
     print("✅ Mac parfaitement synchronisé avec le Cloud !")
-except subprocess.CalledProcessError:
-    print("⚠️ Impossible de synchroniser (Pas d'internet ou conflit mineur). On continue !")
+except subprocess.CalledProcessError as e:
+    print(f"⚠️ Impossible de synchroniser : {e.stderr.strip() or 'Conflit mineur'}. On continue !")
 
 # ==========================================
 # ⚙️ 1. PARAMÈTRES GÉNÉRAUX ET INTERRUPTEURS
 # ==========================================
-NOM_UTILISATEUR = "Fvrhnzerr"
-NOM_SIGNATURE_NORMAL = "Farhan Abdoul-Mougni Farhan"
+NOM_UTILISATEUR          = "Fvrhnzerr"
+NOM_SIGNATURE_NORMAL     = "Farhan Abdoul-Mougni Farhan"
 NOM_SIGNATURE_MAINTENANCE = "Farhan&Co"
-NOM_REPO = "mes-cours-l1"
+NOM_REPO                 = "mes-cours-l1"
 
 # 🛑 LE BOUTON MAINTENANCE (True = Fermé avec panneau / False = Ouvert)
 MODE_MAINTENANCE = False
@@ -28,9 +34,11 @@ MODE_MAINTENANCE = False
 # 🔓 LE BOUTON MOT DE PASSE (True = Code requis / False = Accès direct)
 MOT_DE_PASSE_ACTIF = False
 
-# ⚠️  SÉCURITÉ : Le mot de passe ci-dessous est VISIBLE dans le HTML généré.
-LOGIN_REQUIS = "L1GI"
-MDP_REQUIS = "IAD2026"
+# 🔐 IDENTIFIANTS — récupérés depuis les variables d'environnement GitHub
+# (Settings → Secrets → Actions : DRIVE_LOGIN et DRIVE_MDP)
+# Si absent, les valeurs par défaut ci-dessous sont utilisées (développement local)
+LOGIN_REQUIS = os.environ.get("DRIVE_LOGIN", "L1GI")
+MDP_REQUIS   = os.environ.get("DRIVE_MDP",   "IAD2026")
 
 # ==========================================
 # 📁 2. CONFIGURATION DES DOSSIERS
@@ -47,51 +55,47 @@ noms_annees = {
     "L3": "Licence 3"
 }
 
-noms_matieres = {
-    "algebre_lineaire":          "📐 Algèbre Linéaire",
-    "algebre lineaire":          "📐 Algèbre Linéaire",
-    "Algèbre lineaire":          "📐 Algèbre Linéaire",
-    "Algèbre linéaire":          "📐 Algèbre Linéaire",
-    "algebre":                   "📐 Algèbre Linéaire",
-    "algo_avancee":              "🧬 Algorithme Avancée",
-    "algo avancee":              "🧬 Algorithme Avancée",
-    "algorithme_avance":         "🧬 Algorithme Avancée",
-    "Algo":                      "🧬 Algorithmique",
-    "algo":                      "🧬 Algorithmique",
-    "system_exploitation":       "💻 Système d'Exploitation",
-    "systeme_exploitation":      "💻 Système d'Exploitation",
-    "web":                       "🌐 Développement Web",
-    "dev_web":                   "🌐 Développement Web",
-    "system_logique":            "🔢 Système Logique",
-    "systeme_logique":           "🔢 Système Logique",
-    "cisco":                     "📡 CISCO",
-    "CISCO":                     "📡 CISCO",
-    "francais":                  "📚 Français",
-    "Francais":                  "📚 Français",
-    "français":                  "📚 Français",
-    "Réseau":                    "🌐 Réseau",
-    "reseau":                    "🌐 Réseau",
-    "réseau":                    "🌐 Réseau",
-    "TEC1":                      "📝 TEC1",
-    "tec1":                      "📝 TEC1",
-    "Anglais":                   "🇬🇧 Anglais",
-    "anglais":                   "🇬🇧 Anglais",
-    "Architecture des ordinateurs": "🖥️ Architecture des Ordinateurs",
+# ✅ Dictionnaire propre — clés en minuscules uniquement, lookup insensible à la casse
+noms_matieres_base = {
+    "algebre_lineaire":             "📐 Algèbre Linéaire",
+    "algebre lineaire":             "📐 Algèbre Linéaire",
+    "algebre":                      "📐 Algèbre Linéaire",
+    "algo_avancee":                 "🧬 Algorithme Avancée",
+    "algo avancee":                 "🧬 Algorithme Avancée",
+    "algorithme_avance":            "🧬 Algorithme Avancée",
+    "algo":                         "🧬 Algorithmique",
+    "system_exploitation":          "💻 Système d'Exploitation",
+    "systeme_exploitation":         "💻 Système d'Exploitation",
+    "web":                          "🌐 Développement Web",
+    "dev_web":                      "🌐 Développement Web",
+    "system_logique":               "🔢 Système Logique",
+    "systeme_logique":              "🔢 Système Logique",
+    "cisco":                        "📡 CISCO",
+    "francais":                     "📚 Français",
+    "français":                     "📚 Français",
+    "reseau":                       "🌐 Réseau",
+    "réseau":                       "🌐 Réseau",
+    "tec1":                         "📝 TEC1",
+    "anglais":                      "🇬🇧 Anglais",
     "architecture des ordinateurs": "🖥️ Architecture des Ordinateurs",
-    "architecture_ordinateurs":  "🖥️ Architecture des Ordinateurs",
-    "analyse-MATH":              "📊 Analyse & Mathématiques",
-    "analyse_math":              "📊 Analyse & Mathématiques",
-    "analyse math":              "📊 Analyse & Mathématiques",
-    "Base de données":           "🗄️ Base de Données",
-    "base de données":           "🗄️ Base de Données",
-    "base_de_donnees":           "🗄️ Base de Données",
-    "base_donnees":              "🗄️ Base de Données",
+    "architecture_ordinateurs":     "🖥️ Architecture des Ordinateurs",
+    "analyse-math":                 "📊 Analyse & Mathématiques",
+    "analyse_math":                 "📊 Analyse & Mathématiques",
+    "analyse math":                 "📊 Analyse & Mathématiques",
+    "base de données":              "🗄️ Base de Données",
+    "base_de_donnees":              "🗄️ Base de Données",
+    "base_donnees":                 "🗄️ Base de Données",
 }
+
+def get_nom_matiere(matiere):
+    """Retourne le nom affiché d'une matière (insensible à la casse)."""
+    key = matiere.lower().strip()
+    return noms_matieres_base.get(key) or "📚 " + matiere.replace("_", " ").capitalize()
 
 extensions_valides = (
     '.pdf', '.doc', '.docx', '.ppt', '.pptx', '.xls', '.xlsx',
     '.txt', '.png', '.jpg', '.jpeg', '.zip', '.rar',
-    '.c', '.cpp', '.py', '.java', '.html', '.css', '.js', '.heic', '.HEIC'
+    '.c', '.cpp', '.py', '.java', '.html', '.css', '.js', '.heic'
 )
 
 KEYWORDS_SUJET = [
@@ -125,6 +129,9 @@ def est_ramadan():
     return False
 
 AFFICHER_RAMADAN = est_ramadan()
+
+# CSS de la lune — affiché uniquement pendant le Ramadan
+lune_css = "body::after { content: '🌙'; position: fixed; top: 20px; right: 20px; font-size: 2.5rem; opacity: 0.8; pointer-events: none; z-index: 1000; }" if AFFICHER_RAMADAN else ""
 
 # ==========================================
 # 🚧 4. PAGE DE MAINTENANCE
@@ -194,7 +201,7 @@ else:
                     fichiers_cours  = ""
                     fichiers_td     = ""
                     fichiers_tp     = ""
-                    fichiers_sujets = ""  
+                    fichiers_sujets = ""
 
                     for racine, dirs, fichiers in os.walk(chemin_matiere):
                         for fichier in sorted(fichiers):
@@ -222,11 +229,7 @@ else:
                             else:
                                 fichiers_cours += f'{lien}<span class="tag tag-cours">COURS</span> 📖 {nom_affichable} {span_taille}</a>\n'
 
-                    titre = (
-                        noms_matieres.get(matiere)
-                        or noms_matieres.get(matiere.lower())
-                        or "📚 " + matiere.replace("_", " ").capitalize()
-                    )
+                    titre = get_nom_matiere(matiere)
 
                     if annee not in data: data[annee] = {}
                     if filiere not in data[annee]: data[annee][filiere] = {}
@@ -235,7 +238,7 @@ else:
                         "cours":  fichiers_cours,
                         "td":     fichiers_td,
                         "tp":     fichiers_tp,
-                        "sujets": fichiers_sujets,  
+                        "sujets": fichiers_sujets,
                     }
 
     cartes_html = ""
@@ -315,6 +318,7 @@ else:
         }}
         * {{ box-sizing: border-box; }}
         body {{ font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); padding: 0; line-height: 1.5; margin: 0; transition: background 0.3s, color 0.3s; scroll-behavior: smooth; }}
+        {lune_css}
 
         /* ── LOGIN ── */
         #login-screen {{ position: fixed; top: 0; left: 0; width: 100%; height: 100vh; background: var(--bg); display: {display_login}; align-items: center; justify-content: center; z-index: 9999; }}
@@ -407,8 +411,6 @@ else:
         .boss-name {{ color: var(--primary); font-weight: 900; font-size: 1.1rem; }}
         .copyright {{ font-size: 0.8rem; color: #94a3b8; margin-top: 10px; padding-top: 15px; border-top: 1px solid var(--border); line-height: 1.7; }}
         .copyright small {{ font-size: 0.75rem; opacity: 0.8; font-style: italic; }}
-
-        body::after {{ content: "🌙"; position: fixed; top: 20px; right: 20px; font-size: 2.5rem; opacity: 0.8; pointer-events: none; z-index: 1000; }}
     </style>
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-PWQN6WBSV4"></script>
     <script>
