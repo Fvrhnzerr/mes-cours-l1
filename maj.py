@@ -29,7 +29,7 @@ NOM_SIGNATURE_MAINTENANCE = "Farhan&Co"
 NOM_REPO                 = "mes-cours-l1"
 
 # 🛑 LE BOUTON MAINTENANCE (True = Fermé avec panneau / False = Ouvert)
-MODE_MAINTENANCE = True
+MODE_MAINTENANCE = False
 
 # 🔓 LE BOUTON MOT DE PASSE (True = Code requis / False = Accès direct)
 MOT_DE_PASSE_ACTIF = False
