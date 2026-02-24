@@ -32,7 +32,7 @@ NOM_REPO                 = "mes-cours-l1"
 MODE_MAINTENANCE = False
 
 # 🔓 LE BOUTON MOT DE PASSE (True = Code requis / False = Accès direct)
-MOT_DE_PASSE_ACTIF = False
+MOT_DE_PASSE_ACTIF = True
 
 # 🔐 IDENTIFIANTS (La correction magique est ici !)
 # Si GitHub ne donne rien, on prend L1GI et IAD2026 par défaut
