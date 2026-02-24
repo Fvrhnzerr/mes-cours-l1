@@ -3,16 +3,118 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>En Maintenance - Drive Universitaire</title>
+    <title>Drive Universitaire</title>
     <style>
-        :root { --primary: #d4af37; --bg: #f8fafc; --card: #ffffff; --text: #1e293b; }
-        @media (prefers-color-scheme: dark) { :root { --bg: #0f172a; --card: #1e293b; --text: #f1f5f9; } }
-        body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); padding: 20px; margin: 0; display: flex; flex-direction: column; min-height: 100vh; }
-        header { text-align: center; margin: auto; padding: 40px; background: var(--card); border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border-bottom: 4px solid var(--primary); max-width: 600px; width: 100%; box-sizing: border-box; }
-        h1 { margin: 0 0 15px 0; color: var(--primary); font-size: 2.2rem; }
-        p { font-size: 1.1rem; color: #64748b; margin: 5px 0; line-height: 1.5; }
-        footer { text-align: center; padding: 30px; font-size: 1rem; color: #64748b; margin-top: auto; }
-        .boss-name { color: var(--primary); font-weight: 900; font-size: 1.2rem; }
+        :root {
+            --primary: #d4af37; --bg: #f8fafc; --card: #ffffff;
+            --text: #1e293b; --border: #e2e8f0;
+            --link-bg: #f8fafc; --link-hover: #fffbeb;
+            --subtitle-bg: #ffffff; --subtitle-hover: #f1f5f9;
+        }
+        @media (prefers-color-scheme: dark) {
+            :root { --bg: #0f172a; --card: #1e293b; --text: #f1f5f9; --border: #334155; --link-bg: #0f172a; --link-hover: #334155; --subtitle-bg: #1e293b; --subtitle-hover: #334155; }
+            .ramadan-message { background: #431407 !important; color: #fdba74 !important; border-color: #c2410c !important; }
+            .subtitle, footer { color: #94a3b8 !important; }
+            .file-link { color: #cbd5e1 !important; }
+            .nav-card { background: #1e293b !important; }
+            .nav-card:hover { background: #263044 !important; }
+            .breadcrumb { background: #1e293b !important; border-color: #334155 !important; }
+        }
+        * { box-sizing: border-box; }
+        body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); padding: 0; line-height: 1.5; margin: 0; transition: background 0.3s, color 0.3s; scroll-behavior: smooth; }
+        body::after { content: '🌙'; position: fixed; top: 20px; right: 20px; font-size: 2.5rem; opacity: 0.8; pointer-events: none; z-index: 1000; }
+
+        /* ── LOGIN ── */
+        #login-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100vh; background: var(--bg); display: none; align-items: center; justify-content: center; z-index: 9999; }
+        .login-box { background: var(--card); padding: 40px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); border: 1px solid var(--border); text-align: center; max-width: 350px; width: 90%; }
+        .login-box h2 { color: var(--primary); margin-top: 0; font-size: 1.8rem; margin-bottom: 5px; }
+        .login-box p { color: #64748b; font-size: 0.9rem; margin-bottom: 25px; }
+        .login-box input { width: 100%; padding: 12px; margin-bottom: 15px; border: 2px solid var(--border); border-radius: 8px; background: var(--bg); color: var(--text); outline: none; transition: 0.2s; }
+        .login-box input:focus { border-color: var(--primary); }
+        .login-box button { width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 1rem; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .login-box button:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(212,175,55,0.4); }
+        #login-error { color: #ef4444; font-size: 0.85rem; margin-top: 15px; display: none; font-weight: bold; }
+        .login-warning { font-size: 0.75rem; color: #94a3b8; margin-top: 20px; }
+
+        /* ── LAYOUT ── */
+        #main-content { display: block; padding: 20px; min-height: 100vh; }
+        header { text-align: center; padding: 30px; background: var(--card); border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border-bottom: 4px solid var(--primary); max-width: 1160px; margin: 0 auto 30px auto; transition: background 0.3s; }
+        h1 { margin: 0; color: var(--primary); font-size: 2rem; }
+        .subtitle { font-size: 1.1rem; color: #64748b; margin-top: 5px; font-weight: 500; }
+        .ramadan-message { margin-top: 15px; font-size: 0.9rem; background: #fff7ed; color: #c2410c; padding: 8px 20px; border-radius: 20px; display: inline-block; border: 1px solid #fdba74; font-weight: bold; }
+
+        /* ── BREADCRUMB ── */
+        .breadcrumb { display: none; align-items: center; gap: 8px; max-width: 1200px; margin: 0 auto 20px auto; background: var(--card); padding: 12px 20px; border-radius: 12px; border: 1px solid var(--border); flex-wrap: wrap; }
+        .breadcrumb.visible { display: flex; }
+        .bc-item { color: #94a3b8; font-size: 0.9rem; }
+        .bc-item.link { color: var(--primary); cursor: pointer; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
+        .bc-item.link:hover { opacity: 0.75; }
+        .bc-sep { color: #cbd5e1; font-size: 0.8rem; }
+        .btn-retour { margin-left: auto; padding: 6px 16px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 0.85rem; font-weight: bold; cursor: pointer; transition: 0.2s; }
+        .btn-retour:hover { transform: translateY(-1px); box-shadow: 0 3px 10px rgba(212,175,55,0.4); }
+
+        /* ── ÉCRANS ── */
+        .screen { display: none; max-width: 1200px; margin: 0 auto; animation: fadeIn 0.25s ease; }
+        .screen.active { display: block; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .screen-title { font-size: 1.3rem; font-weight: 800; margin-bottom: 20px; color: var(--text); }
+        .screen-title span { color: var(--primary); }
+
+        /* ── GRILLES NAV ── */
+        .nav-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; }
+        .nav-card { background: var(--card); border: 2px solid var(--border); border-radius: 16px; padding: 30px 20px; text-align: center; cursor: pointer; transition: all 0.25s; }
+        .nav-card:hover { border-color: var(--primary); transform: translateY(-4px); box-shadow: 0 10px 25px rgba(212,175,55,0.2); }
+        .nav-card-icon { font-size: 3rem; margin-bottom: 12px; }
+        .nav-card-title { font-size: 1.1rem; font-weight: 800; color: var(--text); margin-bottom: 5px; }
+        .nav-card-sub { font-size: 0.85rem; color: #94a3b8; }
+
+        /* ── FILTRE ── */
+        .filters { display: flex; gap: 15px; justify-content: center; margin-bottom: 25px; flex-wrap: wrap; }
+        .search-container { width: 100%; max-width: 340px; }
+        input[type="text"] { width: 100%; padding: 10px 15px; border-radius: 25px; border: 2px solid var(--border); background: var(--bg); color: var(--text); font-size: 0.95rem; outline: none; transition: 0.3s; }
+        input[type="text"]:focus { border-color: var(--primary); box-shadow: 0 0 10px rgba(212,175,55,0.3); }
+
+        /* ── CARTES MATIÈRES ── */
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; }
+        .card { background: var(--card); border-radius: 12px; padding: 20px; border: 1px solid var(--border); transition: all 0.3s; }
+        .card:hover { transform: translateY(-3px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.2); }
+        .card-badge { font-size: 0.7rem; color: #fff; background: var(--primary); padding: 3px 8px; border-radius: 12px; display: inline-block; margin-bottom: 10px; font-weight: bold; }
+        h2 { font-size: 1.1rem; margin: 0 0 15px 0; padding-bottom: 10px; border-bottom: 2px solid var(--border); display: flex; align-items: center; gap: 10px; }
+
+        details.sub-section { margin-bottom: 12px; background: var(--link-bg); border-radius: 8px; border: 1px solid var(--border); overflow: hidden; }
+        summary.sub-title { font-size: 0.95rem; font-weight: bold; color: var(--text); padding: 12px 15px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; background: var(--subtitle-bg); transition: 0.2s; list-style: none; user-select: none; }
+        summary.sub-title::-webkit-details-marker { display: none; }
+        summary.sub-title:hover { background: var(--subtitle-hover); }
+        summary.sub-title::after { content: '▼'; font-size: 0.8rem; color: #94a3b8; transition: transform 0.3s; }
+        details[open] summary.sub-title::after { transform: rotate(180deg); }
+        details[open] summary.sub-title { border-bottom: 1px solid var(--border); }
+        .folder-content { padding: 12px; display: flex; flex-direction: column; gap: 8px; }
+
+        .file-link { display: flex; align-items: center; text-decoration: none; color: #475569; padding: 10px; background: var(--subtitle-bg); border-radius: 8px; font-size: 0.9rem; border: 1px solid var(--border); transition: all 0.2s; }
+        .file-link:hover { background: var(--link-hover); border-color: var(--primary); color: var(--primary) !important; transform: translateX(5px); }
+        .file-size { font-size: 0.75rem; color: #94a3b8; margin-left: auto; font-weight: normal; }
+
+        /* ── TAGS ── */
+        .tag { font-size: 0.65rem; font-weight: 800; padding: 3px 7px; border-radius: 5px; margin-right: 10px; text-transform: uppercase; }
+        .tag-cours  { background: rgba(245,158,11,0.2);  color: #d97706; border: 1px solid rgba(245,158,11,0.3); }
+        .tag-td     { background: rgba(34,197,94,0.2);   color: #16a34a; border: 1px solid rgba(34,197,94,0.3); }
+        .tag-tp     { background: rgba(56,189,248,0.2);  color: #0284c7; border: 1px solid rgba(56,189,248,0.3); }
+        .tag-sujet  { background: rgba(168,85,247,0.2);  color: #9333ea; border: 1px solid rgba(168,85,247,0.3); }
+
+        /* ── AUCUN RÉSULTAT ── */
+        #no-result { display: none; text-align: center; padding: 60px 20px; color: #94a3b8; font-size: 1.1rem; }
+        #no-result span { font-size: 3rem; display: block; margin-bottom: 15px; }
+
+        /* ── RETOUR EN HAUT ── */
+        #backToTop { display: none; position: fixed; bottom: 30px; right: 30px; z-index: 99; font-size: 1.5rem; border: none; outline: none; background-color: var(--primary); color: white; cursor: pointer; border-radius: 50%; width: 50px; height: 50px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); transition: 0.3s; justify-content: center; align-items: center; opacity: 0; pointer-events: none; }
+        #backToTop.show { opacity: 1; pointer-events: auto; display: flex; }
+        #backToTop:hover { transform: translateY(-5px); box-shadow: 0 6px 15px rgba(212,175,55,0.5); }
+
+        /* ── FOOTER ── */
+        footer { text-align: center; margin-top: 60px; padding: 30px; font-size: 0.95rem; color: #64748b; border-top: 1px solid var(--border); line-height: 1.8; }
+        .boss-name { color: var(--primary); font-weight: 900; font-size: 1.1rem; }
+        .copyright { font-size: 0.8rem; color: #94a3b8; margin-top: 10px; padding-top: 15px; border-top: 1px solid var(--border); line-height: 1.7; }
+        .copyright small { font-size: 0.75rem; opacity: 0.8; font-style: italic; }
     </style>
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-PWQN6WBSV4"></script>
     <script>
@@ -23,11 +125,303 @@
     </script>
 </head>
 <body>
+
+<div id="login-screen">
+    <div class="login-box">
+        <h2>🔒 Accès Privé</h2>
+        <p>Entrez vos identifiants pour accéder au Drive.</p>
+        <input type="text" id="username" placeholder="Identifiant" autocomplete="off">
+        <input type="password" id="password" placeholder="Mot de passe">
+        <button onclick="verifierLogin()">Se connecter</button>
+        <p id="login-error">❌ Identifiant ou mot de passe incorrect.</p>
+        <p class="login-warning">⚠️ Protection basique — ne pas partager pour des documents confidentiels.</p>
+    </div>
+</div>
+
+<div id="main-content">
     <header>
-        <h1>🚧 En Maintenance</h1>
-        <p>Le Drive Universitaire est actuellement en cours de mise à jour.</p>
-        <p>Revenez dans quelques minutes ! ✨</p>
+        <h1>🎓 Drive Universitaire</h1>
+        <div class="subtitle">GI • MRT • GE | <b>30 documents</b></div>
+        <div class="ramadan-message">🌙 Ramadan Mubarak ! ✨</div>
     </header>
-    <footer>By <span class="boss-name">Farhan&Co</span></footer>
+
+    <div class="breadcrumb" id="breadcrumb">
+        <span class="bc-item link" onclick="goHome()">🏠 Accueil</span>
+        <span class="bc-sep" id="sep1" style="display:none">›</span>
+        <span class="bc-item" id="bc-annee"   style="display:none"></span>
+        <span class="bc-sep" id="sep2" style="display:none">›</span>
+        <span class="bc-item" id="bc-filiere" style="display:none"></span>
+        <button class="btn-retour" onclick="goBack()">← Retour</button>
+    </div>
+
+    <div class="screen active" id="screen-annees">
+        <p class="screen-title">Choisissez une <span>année</span> :</p>
+        <div class="nav-grid">
+        <div class="nav-card" onclick="goFiliere('L1')">
+            <div class="nav-card-icon">📘</div>
+            <div class="nav-card-title">Licence 1</div>
+            <div class="nav-card-sub">11 matières</div>
+        </div>
+        <div class="nav-card" onclick="goFiliere('L2')">
+            <div class="nav-card-icon">📗</div>
+            <div class="nav-card-title">Licence 2</div>
+            <div class="nav-card-sub">Aucun document</div>
+        </div>
+        <div class="nav-card" onclick="goFiliere('L3')">
+            <div class="nav-card-icon">📕</div>
+            <div class="nav-card-title">Licence 3</div>
+            <div class="nav-card-sub">Aucun document</div>
+        </div></div>
+    </div>
+
+    <div class="screen" id="screen-filieres">
+        <p class="screen-title">Choisissez une <span>filière</span> :</p>
+        <div class="nav-grid" id="filieres-grid"></div>
+    </div>
+
+    <div class="screen" id="screen-matieres">
+        <div class="filters">
+            <div class="search-container">
+                <input type="text" id="searchBar" placeholder="🔍 Rechercher un document...">
+            </div>
+        </div>
+        <div class="grid" id="cards-container">
+            <div class="card" data-filiere="GE" data-annee="L1"><div class="card-badge">GE - L1</div><h2>🇬🇧 Anglais</h2><div class="file-list"><details class="sub-section"><summary class="sub-title">📖 Cours</summary><div class="folder-content"><a href="cours/GE/L1/Anglais/New_English_File_Intermediate_Student_s_compressed.pdf" target="_blank" class="file-link"><span class="tag tag-cours">COURS</span> 📖 New English File Intermediate Student s compressed.pdf <span class='file-size'>16.8 Mo</span></a>
+</div></details></div></div><div class="card" data-filiere="GE" data-annee="L1"><div class="card-badge">GE - L1</div><h2>📚 Introduction à la logistique</h2><div class="file-list"><details class="sub-section"><summary class="sub-title">📖 Cours</summary><div class="folder-content"><a href="cours/GE/L1/Introduction à la logistique/Cours/0074a3e9-b7a7-4e8d-bd56-9c58da744b67.JPG" target="_blank" class="file-link"><span class="tag tag-cours">COURS</span> 📖 0074a3e9-b7a7-4e8d-bd56-9c58da744b67.JPG <span class='file-size'>141.3 Ko</span></a>
+<a href="cours/GE/L1/Introduction à la logistique/Cours/6174bbe4-b438-4029-807e-975c68bccb93.JPG" target="_blank" class="file-link"><span class="tag tag-cours">COURS</span> 📖 6174bbe4-b438-4029-807e-975c68bccb93.JPG <span class='file-size'>179.4 Ko</span></a>
+<a href="cours/GE/L1/Introduction à la logistique/Cours/96827eed-ab91-49b6-86bd-f4f76988bd7f.JPG" target="_blank" class="file-link"><span class="tag tag-cours">COURS</span> 📖 96827eed-ab91-49b6-86bd-f4f76988bd7f.JPG <span class='file-size'>133.0 Ko</span></a>
+<a href="cours/GE/L1/Introduction à la logistique/Cours/beebdee0-c0d4-4e5d-b510-9665522d4b35.JPG" target="_blank" class="file-link"><span class="tag tag-cours">COURS</span> 📖 beebdee0-c0d4-4e5d-b510-9665522d4b35.JPG <span class='file-size'>157.4 Ko</span></a>
+<a href="cours/GE/L1/Introduction à la logistique/Cours/d82fd58e-1bdb-468c-87cd-172299cd8582.JPG" target="_blank" class="file-link"><span class="tag tag-cours">COURS</span> 📖 d82fd58e-1bdb-468c-87cd-172299cd8582.JPG <span class='file-size'>181.5 Ko</span></a>
+<a href="cours/GE/L1/Introduction à la logistique/Cours/eca26331-0a6d-4ab3-9664-a4d758ff1f31.JPG" target="_blank" class="file-link"><span class="tag tag-cours">COURS</span> 📖 eca26331-0a6d-4ab3-9664-a4d758ff1f31.JPG <span class='file-size'>116.3 Ko</span></a>
+<a href="cours/GE/L1/Introduction à la logistique/Cours/f614e569-021a-4499-9d9b-e797684291f6.JPG" target="_blank" class="file-link"><span class="tag tag-cours">COURS</span> 📖 f614e569-021a-4499-9d9b-e797684291f6.JPG <span class='file-size'>129.9 Ko</span></a>
+</div></details></div></div><div class="card" data-filiere="GE" data-annee="L1"><div class="card-badge">GE - L1</div><h2>📚 Mercatique</h2><div class="file-list"><details class="sub-section"><summary class="sub-title">📖 Cours</summary><div class="folder-content"><a href="cours/GE/L1/Mercatique/Cours /Chap 1 _ LA DEMARCHE MERCATIQUE.docx" target="_blank" class="file-link"><span class="tag tag-cours">COURS</span> 📖 Chap 1   LA DEMARCHE MERCATIQUE.docx <span class='file-size'>2.0 Mo</span></a>
+</div></details><details class="sub-section"><summary class="sub-title">📝 Travaux Dirigés</summary><div class="folder-content"><a href="cours/GE/L1/Mercatique/Td/td mercatique.pdf" target="_blank" class="file-link"><span class="tag tag-td">TD</span> 📝 td mercatique.pdf <span class='file-size'>407.5 Ko</span></a>
+</div></details></div></div><div class="card" data-filiere="GE" data-annee="L1"><div class="card-badge">GE - L1</div><h2>📚 Statisque</h2><div class="file-list"><details class="sub-section"><summary class="sub-title">📖 Cours</summary><div class="folder-content"><a href="cours/GE/L1/Statisque/Cours/Statistique descriptive chapitre 1.pptx" target="_blank" class="file-link"><span class="tag tag-cours">COURS</span> 📖 Statistique descriptive chapitre 1.pptx <span class='file-size'>302.1 Ko</span></a>
+</div></details></div></div><div class="card" data-filiere="GI" data-annee="L1"><div class="card-badge">GI - L1</div><h2>📚 Algèbre lineaire</h2><div class="file-list"><p style="font-size:0.8rem;font-style:italic;opacity:0.7;">Aucun fichier.</p></div></div><div class="card" data-filiere="GI" data-annee="L1"><div class="card-badge">GI - L1</div><h2>🧬 Algorithme Avancée</h2><div class="file-list"><details class="sub-section"><summary class="sub-title">📖 Cours</summary><div class="folder-content"><a href="cours/GI/L1/algo_avancee/Cours/Chap1-Tableau a une dimenssion.pdf" target="_blank" class="file-link"><span class="tag tag-cours">COURS</span> 📖 Chap1-Tableau a une dimenssion.pdf <span class='file-size'>437.4 Ko</span></a>
+<a href="cours/GI/L1/algo_avancee/Cours/Cours complets Algo Avancée et Structure des données 25-26 2.pdf" target="_blank" class="file-link"><span class="tag tag-cours">COURS</span> 📖 Cours complets Algo Avancée et Structure des données 25-26 2.pdf <span class='file-size'>2.0 Mo</span></a>
+<a href="cours/GI/L1/algo_avancee/Cours/Cours complets Algo Avancée et Structure des données 25-26 2.pdf" target="_blank" class="file-link"><span class="tag tag-cours">COURS</span> 📖 Cours complets Algo Avancée et Structure des données 25-26 2.pdf <span class='file-size'>2.0 Mo</span></a>
+<a href="cours/GI/L1/algo_avancee/Cours/Tableau de correspondance entre algo et C (1) (1) (1).pdf" target="_blank" class="file-link"><span class="tag tag-cours">COURS</span> 📖 Tableau de correspondance entre algo et C (1) (1) (1).pdf <span class='file-size'>41.1 Ko</span></a>
+</div></details><details class="sub-section"><summary class="sub-title">📝 Travaux Dirigés</summary><div class="folder-content"><a href="cours/GI/L1/algo_avancee/TP/TD-TP N1_Tableau à 1 dimensin.pdf" target="_blank" class="file-link"><span class="tag tag-td">TD</span> 📝 TD-TP N1 Tableau à 1 dimensin.pdf <span class='file-size'>366.1 Ko</span></a>
+<a href="cours/GI/L1/algo_avancee/TD/TD-TP N1_Tableau à 1 dimensin.pdf" target="_blank" class="file-link"><span class="tag tag-td">TD</span> 📝 TD-TP N1 Tableau à 1 dimensin.pdf <span class='file-size'>366.1 Ko</span></a>
+</div></details></div></div><div class="card" data-filiere="GI" data-annee="L1"><div class="card-badge">GI - L1</div><h2>📡 CISCO</h2><div class="file-list"><p style="font-size:0.8rem;font-style:italic;opacity:0.7;">Aucun fichier.</p></div></div><div class="card" data-filiere="GI" data-annee="L1"><div class="card-badge">GI - L1</div><h2>📚 Français</h2><div class="file-list"><details class="sub-section"><summary class="sub-title">📖 Cours</summary><div class="folder-content"><a href="cours/GI/L1/francais/Cours/IAD Syllabus detaille TEC2 pour les L1GI et les L1MRT pdf.pdf" target="_blank" class="file-link"><span class="tag tag-cours">COURS</span> 📖 IAD Syllabus detaille TEC2 pour les L1GI et les L1MRT pdf.pdf <span class='file-size'>516.0 Ko</span></a>
+</div></details><details class="sub-section"><summary class="sub-title">📝 Travaux Dirigés</summary><div class="folder-content"><a href="cours/GI/L1/francais/TD/IAD Exercices de communication professionnelle.pdf" target="_blank" class="file-link"><span class="tag tag-td">TD</span> 📝 IAD Exercices de communication professionnelle.pdf <span class='file-size'>2.0 Mo</span></a>
+</div></details></div></div><div class="card" data-filiere="GI" data-annee="L1"><div class="card-badge">GI - L1</div><h2>💻 Système d'Exploitation</h2><div class="file-list"><details class="sub-section"><summary class="sub-title">📖 Cours</summary><div class="folder-content"><a href="cours/GI/L1/system_exploitation/Cours/chapitre 1 Introduction aux systemes d_exploitation (2).pdf" target="_blank" class="file-link"><span class="tag tag-cours">COURS</span> 📖 chapitre 1 Introduction aux systemes d exploitation (2).pdf <span class='file-size'>454.2 Ko</span></a>
+</div></details><details class="sub-section"><summary class="sub-title">📝 Travaux Dirigés</summary><div class="folder-content"><a href="cours/GI/L1/system_exploitation/TD/TD 1 Exercice 1.pdf" target="_blank" class="file-link"><span class="tag tag-td">TD</span> 📝 TD 1 Exercice 1.pdf <span class='file-size'>648.6 Ko</span></a>
+</div></details></div></div><div class="card" data-filiere="GI" data-annee="L1"><div class="card-badge">GI - L1</div><h2>🔢 Système Logique</h2><div class="file-list"><details class="sub-section"><summary class="sub-title">📖 Cours</summary><div class="folder-content"><a href="cours/GI/L1/system_logique/Cours/CHAPITRE 1.pdf" target="_blank" class="file-link"><span class="tag tag-cours">COURS</span> 📖 CHAPITRE 1.pdf <span class='file-size'>692.9 Ko</span></a>
+<a href="cours/GI/L1/system_logique/Cours/Systèmes logiques ab.pdf" target="_blank" class="file-link"><span class="tag tag-cours">COURS</span> 📖 Systèmes logiques ab.pdf <span class='file-size'>1.8 Mo</span></a>
+</div></details><details class="sub-section"><summary class="sub-title">📝 Travaux Dirigés</summary><div class="folder-content"><a href="cours/GI/L1/system_logique/TD/Exercice PORTES LOGIQUE.docx" target="_blank" class="file-link"><span class="tag tag-td">TD</span> 📝 Exercice PORTES LOGIQUE.docx <span class='file-size'>20.7 Ko</span></a>
+<a href="cours/GI/L1/system_logique/TD/TD1 3.pdf" target="_blank" class="file-link"><span class="tag tag-td">TD</span> 📝 TD1 3.pdf <span class='file-size'>526.6 Ko</span></a>
+</div></details></div></div><div class="card" data-filiere="GI" data-annee="L1"><div class="card-badge">GI - L1</div><h2>🌐 Développement Web</h2><div class="file-list"><details class="sub-section"><summary class="sub-title">📖 Cours</summary><div class="folder-content"><a href="cours/GI/L1/web/Cours/Html.pdf" target="_blank" class="file-link"><span class="tag tag-cours">COURS</span> 📖 Html.pdf <span class='file-size'>1.3 Mo</span></a>
+</div></details><details class="sub-section"><summary class="sub-title">📝 Travaux Dirigés</summary><div class="folder-content"><a href="cours/GI/L1/web/TD/exoTD1.pdf" target="_blank" class="file-link"><span class="tag tag-td">TD</span> 📝 exoTD1.pdf <span class='file-size'>616.5 Ko</span></a>
+<a href="cours/GI/L1/web/TD/exoTD2.pdf" target="_blank" class="file-link"><span class="tag tag-td">TD</span> 📝 exoTD2.pdf <span class='file-size'>419.2 Ko</span></a>
+</div></details><details class="sub-section"><summary class="sub-title">⚙️ Travaux Pratiques</summary><div class="folder-content"><a href="cours/GI/L1/web/TP/TP1.pdf" target="_blank" class="file-link"><span class="tag tag-tp">TP</span> ⚙️ TP1.pdf <span class='file-size'>566.4 Ko</span></a>
+<a href="cours/GI/L1/web/TP/TP2.pdf" target="_blank" class="file-link"><span class="tag tag-tp">TP</span> ⚙️ TP2.pdf <span class='file-size'>398.2 Ko</span></a>
+</div></details></div></div>
+        </div>
+        <div id="no-result">
+            <span>🔍</span>
+            Aucun document trouvé.<br>
+            <small>Essaie un autre mot-clé.</small>
+        </div>
+    </div>
+
+    <button id="backToTop" title="Retour en haut">↑</button>
+    <footer>
+        By <span class="boss-name">Farhan Abdoul-Mougni Farhan</span>
+        <div class="copyright">
+            © 2026 Farhan Abdoul-Mougni Farhan — Tous droits réservés.<br>
+            <small>Toute reproduction, copie ou redistribution de ce code est strictement interdite sans autorisation écrite.</small>
+        </div>
+    </footer>
+</div>
+
+<script>
+const DATA           = {"L1": {"GE": {"Anglais": {"titre": "🇬🇧 Anglais", "cours": "<a href=\"cours/GE/L1/Anglais/New_English_File_Intermediate_Student_s_compressed.pdf\" target=\"_blank\" class=\"file-link\"><span class=\"tag tag-cours\">COURS</span> 📖 New English File Intermediate Student s compressed.pdf <span class='file-size'>16.8 Mo</span></a>\n", "td": "", "tp": "", "sujets": ""}, "Introduction à la logistique": {"titre": "📚 Introduction à la logistique", "cours": "<a href=\"cours/GE/L1/Introduction à la logistique/Cours/0074a3e9-b7a7-4e8d-bd56-9c58da744b67.JPG\" target=\"_blank\" class=\"file-link\"><span class=\"tag tag-cours\">COURS</span> 📖 0074a3e9-b7a7-4e8d-bd56-9c58da744b67.JPG <span class='file-size'>141.3 Ko</span></a>\n<a href=\"cours/GE/L1/Introduction à la logistique/Cours/6174bbe4-b438-4029-807e-975c68bccb93.JPG\" target=\"_blank\" class=\"file-link\"><span class=\"tag tag-cours\">COURS</span> 📖 6174bbe4-b438-4029-807e-975c68bccb93.JPG <span class='file-size'>179.4 Ko</span></a>\n<a href=\"cours/GE/L1/Introduction à la logistique/Cours/96827eed-ab91-49b6-86bd-f4f76988bd7f.JPG\" target=\"_blank\" class=\"file-link\"><span class=\"tag tag-cours\">COURS</span> 📖 96827eed-ab91-49b6-86bd-f4f76988bd7f.JPG <span class='file-size'>133.0 Ko</span></a>\n<a href=\"cours/GE/L1/Introduction à la logistique/Cours/beebdee0-c0d4-4e5d-b510-9665522d4b35.JPG\" target=\"_blank\" class=\"file-link\"><span class=\"tag tag-cours\">COURS</span> 📖 beebdee0-c0d4-4e5d-b510-9665522d4b35.JPG <span class='file-size'>157.4 Ko</span></a>\n<a href=\"cours/GE/L1/Introduction à la logistique/Cours/d82fd58e-1bdb-468c-87cd-172299cd8582.JPG\" target=\"_blank\" class=\"file-link\"><span class=\"tag tag-cours\">COURS</span> 📖 d82fd58e-1bdb-468c-87cd-172299cd8582.JPG <span class='file-size'>181.5 Ko</span></a>\n<a href=\"cours/GE/L1/Introduction à la logistique/Cours/eca26331-0a6d-4ab3-9664-a4d758ff1f31.JPG\" target=\"_blank\" class=\"file-link\"><span class=\"tag tag-cours\">COURS</span> 📖 eca26331-0a6d-4ab3-9664-a4d758ff1f31.JPG <span class='file-size'>116.3 Ko</span></a>\n<a href=\"cours/GE/L1/Introduction à la logistique/Cours/f614e569-021a-4499-9d9b-e797684291f6.JPG\" target=\"_blank\" class=\"file-link\"><span class=\"tag tag-cours\">COURS</span> 📖 f614e569-021a-4499-9d9b-e797684291f6.JPG <span class='file-size'>129.9 Ko</span></a>\n", "td": "", "tp": "", "sujets": ""}, "Mercatique": {"titre": "📚 Mercatique", "cours": "<a href=\"cours/GE/L1/Mercatique/Cours /Chap 1 _ LA DEMARCHE MERCATIQUE.docx\" target=\"_blank\" class=\"file-link\"><span class=\"tag tag-cours\">COURS</span> 📖 Chap 1   LA DEMARCHE MERCATIQUE.docx <span class='file-size'>2.0 Mo</span></a>\n", "td": "<a href=\"cours/GE/L1/Mercatique/Td/td mercatique.pdf\" target=\"_blank\" class=\"file-link\"><span class=\"tag tag-td\">TD</span> 📝 td mercatique.pdf <span class='file-size'>407.5 Ko</span></a>\n", "tp": "", "sujets": ""}, "Statisque": {"titre": "📚 Statisque", "cours": "<a href=\"cours/GE/L1/Statisque/Cours/Statistique descriptive chapitre 1.pptx\" target=\"_blank\" class=\"file-link\"><span class=\"tag tag-cours\">COURS</span> 📖 Statistique descriptive chapitre 1.pptx <span class='file-size'>302.1 Ko</span></a>\n", "td": "", "tp": "", "sujets": ""}}, "GI": {"Algèbre lineaire": {"titre": "📚 Algèbre lineaire", "cours": "", "td": "", "tp": "", "sujets": ""}, "algo_avancee": {"titre": "🧬 Algorithme Avancée", "cours": "<a href=\"cours/GI/L1/algo_avancee/Cours/Chap1-Tableau a une dimenssion.pdf\" target=\"_blank\" class=\"file-link\"><span class=\"tag tag-cours\">COURS</span> 📖 Chap1-Tableau a une dimenssion.pdf <span class='file-size'>437.4 Ko</span></a>\n<a href=\"cours/GI/L1/algo_avancee/Cours/Cours complets Algo Avancée et Structure des données 25-26 2.pdf\" target=\"_blank\" class=\"file-link\"><span class=\"tag tag-cours\">COURS</span> 📖 Cours complets Algo Avancée et Structure des données 25-26 2.pdf <span class='file-size'>2.0 Mo</span></a>\n<a href=\"cours/GI/L1/algo_avancee/Cours/Cours complets Algo Avancée et Structure des données 25-26 2.pdf\" target=\"_blank\" class=\"file-link\"><span class=\"tag tag-cours\">COURS</span> 📖 Cours complets Algo Avancée et Structure des données 25-26 2.pdf <span class='file-size'>2.0 Mo</span></a>\n<a href=\"cours/GI/L1/algo_avancee/Cours/Tableau de correspondance entre algo et C (1) (1) (1).pdf\" target=\"_blank\" class=\"file-link\"><span class=\"tag tag-cours\">COURS</span> 📖 Tableau de correspondance entre algo et C (1) (1) (1).pdf <span class='file-size'>41.1 Ko</span></a>\n", "td": "<a href=\"cours/GI/L1/algo_avancee/TP/TD-TP N1_Tableau à 1 dimensin.pdf\" target=\"_blank\" class=\"file-link\"><span class=\"tag tag-td\">TD</span> 📝 TD-TP N1 Tableau à 1 dimensin.pdf <span class='file-size'>366.1 Ko</span></a>\n<a href=\"cours/GI/L1/algo_avancee/TD/TD-TP N1_Tableau à 1 dimensin.pdf\" target=\"_blank\" class=\"file-link\"><span class=\"tag tag-td\">TD</span> 📝 TD-TP N1 Tableau à 1 dimensin.pdf <span class='file-size'>366.1 Ko</span></a>\n", "tp": "", "sujets": ""}, "cisco": {"titre": "📡 CISCO", "cours": "", "td": "", "tp": "", "sujets": ""}, "francais": {"titre": "📚 Français", "cours": "<a href=\"cours/GI/L1/francais/Cours/IAD Syllabus detaille TEC2 pour les L1GI et les L1MRT pdf.pdf\" target=\"_blank\" class=\"file-link\"><span class=\"tag tag-cours\">COURS</span> 📖 IAD Syllabus detaille TEC2 pour les L1GI et les L1MRT pdf.pdf <span class='file-size'>516.0 Ko</span></a>\n", "td": "<a href=\"cours/GI/L1/francais/TD/IAD Exercices de communication professionnelle.pdf\" target=\"_blank\" class=\"file-link\"><span class=\"tag tag-td\">TD</span> 📝 IAD Exercices de communication professionnelle.pdf <span class='file-size'>2.0 Mo</span></a>\n", "tp": "", "sujets": ""}, "system_exploitation": {"titre": "💻 Système d'Exploitation", "cours": "<a href=\"cours/GI/L1/system_exploitation/Cours/chapitre 1 Introduction aux systemes d_exploitation (2).pdf\" target=\"_blank\" class=\"file-link\"><span class=\"tag tag-cours\">COURS</span> 📖 chapitre 1 Introduction aux systemes d exploitation (2).pdf <span class='file-size'>454.2 Ko</span></a>\n", "td": "<a href=\"cours/GI/L1/system_exploitation/TD/TD 1 Exercice 1.pdf\" target=\"_blank\" class=\"file-link\"><span class=\"tag tag-td\">TD</span> 📝 TD 1 Exercice 1.pdf <span class='file-size'>648.6 Ko</span></a>\n", "tp": "", "sujets": ""}, "system_logique": {"titre": "🔢 Système Logique", "cours": "<a href=\"cours/GI/L1/system_logique/Cours/CHAPITRE 1.pdf\" target=\"_blank\" class=\"file-link\"><span class=\"tag tag-cours\">COURS</span> 📖 CHAPITRE 1.pdf <span class='file-size'>692.9 Ko</span></a>\n<a href=\"cours/GI/L1/system_logique/Cours/Systèmes logiques ab.pdf\" target=\"_blank\" class=\"file-link\"><span class=\"tag tag-cours\">COURS</span> 📖 Systèmes logiques ab.pdf <span class='file-size'>1.8 Mo</span></a>\n", "td": "<a href=\"cours/GI/L1/system_logique/TD/Exercice PORTES LOGIQUE.docx\" target=\"_blank\" class=\"file-link\"><span class=\"tag tag-td\">TD</span> 📝 Exercice PORTES LOGIQUE.docx <span class='file-size'>20.7 Ko</span></a>\n<a href=\"cours/GI/L1/system_logique/TD/TD1 3.pdf\" target=\"_blank\" class=\"file-link\"><span class=\"tag tag-td\">TD</span> 📝 TD1 3.pdf <span class='file-size'>526.6 Ko</span></a>\n", "tp": "", "sujets": ""}, "web": {"titre": "🌐 Développement Web", "cours": "<a href=\"cours/GI/L1/web/Cours/Html.pdf\" target=\"_blank\" class=\"file-link\"><span class=\"tag tag-cours\">COURS</span> 📖 Html.pdf <span class='file-size'>1.3 Mo</span></a>\n", "td": "<a href=\"cours/GI/L1/web/TD/exoTD1.pdf\" target=\"_blank\" class=\"file-link\"><span class=\"tag tag-td\">TD</span> 📝 exoTD1.pdf <span class='file-size'>616.5 Ko</span></a>\n<a href=\"cours/GI/L1/web/TD/exoTD2.pdf\" target=\"_blank\" class=\"file-link\"><span class=\"tag tag-td\">TD</span> 📝 exoTD2.pdf <span class='file-size'>419.2 Ko</span></a>\n", "tp": "<a href=\"cours/GI/L1/web/TP/TP1.pdf\" target=\"_blank\" class=\"file-link\"><span class=\"tag tag-tp\">TP</span> ⚙️ TP1.pdf <span class='file-size'>566.4 Ko</span></a>\n<a href=\"cours/GI/L1/web/TP/TP2.pdf\" target=\"_blank\" class=\"file-link\"><span class=\"tag tag-tp\">TP</span> ⚙️ TP2.pdf <span class='file-size'>398.2 Ko</span></a>\n", "sujets": ""}}}};
+const FILIERE_LABELS = {"GI": ["💻", "Génie Informatique", "GI"], "MRT": ["📡", "Maintenance Réseau Telecom", "MRT"], "GE": ["📊", "Gestion des Entreprises", "GE"]};
+const ALL_FILIERES   = ["GI", "MRT", "GE"];
+
+let currentAnnee   = null;
+let currentFiliere = null;
+let navHistory     = [];
+
+// ── LOGIN ──────────────────────────────────────────────────────────────
+function verifierLogin() {
+    var user = document.getElementById("username").value;
+    var pass = document.getElementById("password").value;
+    if (user === "L1GI" && pass === "IAD2026") {
+        sessionStorage.setItem("driveAutorise", "oui");
+        afficherSite();
+    } else {
+        document.getElementById("login-error").style.display = "block";
+        var box = document.querySelector(".login-box");
+        box.style.transform = "translateX(10px)";
+        setTimeout(() => box.style.transform = "translateX(-10px)", 100);
+        setTimeout(() => box.style.transform = "translateX(0)", 200);
+    }
+}
+function afficherSite() {
+    document.getElementById("login-screen").style.display = "none";
+    document.getElementById("main-content").style.display = "block";
+}
+if ("False" === "False" || sessionStorage.getItem("driveAutorise") === "oui") {
+    afficherSite();
+}
+document.getElementById("password").addEventListener("keypress", e => {
+    if (e.key === "Enter") verifierLogin();
+});
+
+// ── NAVIGATION ─────────────────────────────────────────────────────────
+function showScreen(id) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function updateBreadcrumb() {
+    const bc = document.getElementById('breadcrumb');
+    if (navHistory.length === 0) { bc.classList.remove('visible'); return; }
+    bc.classList.add('visible');
+
+    const bcAnnee   = document.getElementById('bc-annee');
+    const bcFiliere = document.getElementById('bc-filiere');
+
+    if (currentAnnee) {
+        document.getElementById('sep1').style.display = '';
+        bcAnnee.style.display = '';
+        bcAnnee.textContent = currentAnnee;
+        if (navHistory[navHistory.length - 1] !== 'filieres') {
+            bcAnnee.classList.add('link');
+            bcAnnee.onclick = () => goFiliere(currentAnnee);
+        } else {
+            bcAnnee.classList.remove('link');
+            bcAnnee.onclick = null;
+        }
+    } else {
+        document.getElementById('sep1').style.display = 'none';
+        bcAnnee.style.display = 'none';
+    }
+
+    if (currentFiliere) {
+        const lbl = FILIERE_LABELS[currentFiliere];
+        document.getElementById('sep2').style.display = '';
+        bcFiliere.style.display = '';
+        bcFiliere.textContent = lbl ? lbl[2] + ' · ' + lbl[1] : currentFiliere;
+        bcFiliere.classList.remove('link');
+    } else {
+        document.getElementById('sep2').style.display = 'none';
+        bcFiliere.style.display = 'none';
+    }
+}
+
+function goFiliere(annee) {
+    currentAnnee   = annee;
+    currentFiliere = null;
+    navHistory     = ['filieres'];
+
+    const grid     = document.getElementById('filieres-grid');
+    grid.innerHTML = '';
+    const filieres = DATA[annee] || {};
+
+    ALL_FILIERES.forEach(fil => {
+        const matieres  = filieres[fil] || {};
+        const nb        = Object.keys(matieres).length;
+        const lbl       = FILIERE_LABELS[fil];
+        const emoji     = lbl ? lbl[0] : '📁';
+        const nom       = lbl ? lbl[1] : fil;
+        const code      = lbl ? lbl[2] : fil;
+        const sousTitre = nb === 0 ? 'Aucun document' : nb + ' matière' + (nb > 1 ? 's' : '');
+        grid.innerHTML += `
+            <div class="nav-card" onclick="goMatieres('${annee}', '${fil}')">
+                <div class="nav-card-icon">${emoji}</div>
+                <div class="nav-card-title">${nom}</div>
+                <div class="nav-card-sub">${code} • ${sousTitre}</div>
+            </div>`;
+    });
+
+    showScreen('screen-filieres');
+    updateBreadcrumb();
+}
+
+function goMatieres(annee, filiere) {
+    currentAnnee   = annee;
+    currentFiliere = filiere;
+    navHistory     = ['filieres', 'matieres'];
+
+    let count = 0;
+    document.querySelectorAll('.card').forEach(card => {
+        const show = card.dataset.filiere === filiere && card.dataset.annee === annee;
+        card.style.display = show ? 'block' : 'none';
+        if (show) count++;
+    });
+
+    document.getElementById('searchBar').value = '';
+    document.querySelectorAll('details').forEach(d => d.open = false);
+    document.querySelectorAll('.file-link').forEach(l => l.style.display = 'flex');
+    document.getElementById('no-result').style.display = count === 0 ? 'block' : 'none';
+
+    showScreen('screen-matieres');
+    updateBreadcrumb();
+}
+
+function goBack() {
+    if (navHistory.length === 0) return;
+    navHistory.pop();
+    const current = navHistory[navHistory.length - 1];
+    if (current === 'filieres') {
+        currentFiliere = null;
+        showScreen('screen-filieres');
+        updateBreadcrumb();
+    } else {
+        goHome();
+    }
+}
+
+function goHome() {
+    currentAnnee = currentFiliere = null;
+    navHistory   = [];
+    showScreen('screen-annees');
+    updateBreadcrumb();
+}
+
+// ── RECHERCHE ──────────────────────────────────────────────────────────
+document.getElementById('searchBar').addEventListener('keyup', function() {
+    const term = this.value.toLowerCase().trim();
+    let count  = 0;
+
+    document.querySelectorAll('.card').forEach(card => {
+        if (card.dataset.filiere !== currentFiliere || card.dataset.annee !== currentAnnee) return;
+
+        const links = card.querySelectorAll('.file-link');
+        let hasVisible = false;
+
+        links.forEach(link => {
+            const show = link.textContent.toLowerCase().includes(term);
+            link.style.display = show ? 'flex' : 'none';
+            if (show) hasVisible = true;
+        });
+
+        card.querySelectorAll('details').forEach(d => {
+            if (term !== '') {
+                d.open = true;
+            } else {
+                d.open = false;
+                d.querySelectorAll('.file-link').forEach(l => l.style.display = 'flex');
+                hasVisible = true;
+            }
+        });
+
+        const show = hasVisible || (term === '' && links.length === 0);
+        card.style.display = show ? 'block' : 'none';
+        if (show) count++;
+    });
+
+    document.getElementById('no-result').style.display = count === 0 ? 'block' : 'none';
+});
+
+// ── RETOUR EN HAUT ─────────────────────────────────────────────────────
+const btn = document.getElementById("backToTop");
+window.onscroll = () => btn.classList.toggle("show", document.documentElement.scrollTop > 300);
+btn.onclick     = () => window.scrollTo({ top: 0, behavior: 'smooth' });
+</script>
 </body>
 </html>
