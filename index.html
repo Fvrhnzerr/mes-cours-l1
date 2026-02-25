@@ -25,7 +25,7 @@
         body::after { content: '🌙'; position: fixed; top: 20px; right: 20px; font-size: 2.5rem; opacity: 0.8; pointer-events: none; z-index: 1000; }
 
         /* ── LOGIN ── */
-        #login-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100vh; background: var(--bg); display: none; align-items: center; justify-content: center; z-index: 9999; }
+        #login-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100vh; background: var(--bg); display: flex; align-items: center; justify-content: center; z-index: 9999; }
         .login-box { background: var(--card); padding: 40px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); border: 1px solid var(--border); text-align: center; max-width: 350px; width: 90%; }
         .login-box h2 { color: var(--primary); margin-top: 0; font-size: 1.8rem; margin-bottom: 5px; }
         .login-box p { color: #64748b; font-size: 0.9rem; margin-bottom: 25px; }
@@ -37,7 +37,7 @@
         .login-warning { font-size: 0.75rem; color: #94a3b8; margin-top: 20px; }
 
         /* ── LAYOUT ── */
-        #main-content { display: block; padding: 20px; min-height: 100vh; }
+        #main-content { display: none; padding: 20px; min-height: 100vh; }
         header { text-align: center; padding: 30px; background: var(--card); border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border-bottom: 4px solid var(--primary); max-width: 1160px; margin: 0 auto 30px auto; transition: background 0.3s; }
         h1 { margin: 0; color: var(--primary); font-size: 2rem; }
         .subtitle { font-size: 1.1rem; color: #64748b; margin-top: 5px; font-weight: 500; }
@@ -263,7 +263,7 @@ function afficherSite() {
     document.getElementById("login-screen").style.display = "none";
     document.getElementById("main-content").style.display = "block";
 }
-if ("False" === "False" || sessionStorage.getItem("driveAutorise") === "oui") {
+if ("True" === "False" || sessionStorage.getItem("driveAutorise") === "oui") {
     afficherSite();
 }
 document.getElementById("password").addEventListener("keypress", e => {
