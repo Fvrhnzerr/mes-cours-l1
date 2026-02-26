@@ -32,7 +32,7 @@ NOM_REPO                 = "mes-cours-l1"
 MODE_MAINTENANCE = False
 
 # 🔓 LE BOUTON MOT DE PASSE (True = Code requis / False = Accès direct)
-MOT_DE_PASSE_ACTIF = True
+MOT_DE_PASSE_ACTIF = False
 
 
 # 🔐 IDENTIFIANTS (La correction magique est ici !)
