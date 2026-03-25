@@ -34,7 +34,6 @@ MODE_MAINTENANCE = False
 # 🔓 LE BOUTON MOT DE PASSE (True = Code requis / False = Accès direct)
 MOT_DE_PASSE_ACTIF = False
 
-
 # 🔐 IDENTIFIANTS (La correction magique est ici !)
 # Si GitHub ne donne rien, on prend L1GI et IAD2026 par défaut
 LOGIN_REQUIS = os.environ.get("DRIVE_LOGIN") or "L1GI"
@@ -115,23 +114,12 @@ def est_dossier_sujet(chemin):
     return False
 
 # ==========================================
-# 🌙 3. DÉTECTION AUTOMATIQUE DU RAMADAN
+# 🌴 3. MESSAGE SPÉCIAL ÉTÉ
 # ==========================================
-def est_ramadan():
-    aujourd_hui = datetime.date.today()
-    periodes_ramadan = [
-        (datetime.date(2025, 3, 1),  datetime.date(2025, 3, 29)),
-        (datetime.date(2026, 2, 18), datetime.date(2026, 3, 19)),
-    ]
-    for debut, fin in periodes_ramadan:
-        if debut <= aujourd_hui <= fin:
-            return True
-    return False
+AFFICHER_MESSAGE_ETE = True
 
-AFFICHER_RAMADAN = est_ramadan()
-
-# CSS de la lune — affiché uniquement pendant le Ramadan
-lune_css = "body::after { content: '🌙'; position: fixed; top: 20px; right: 20px; font-size: 2.5rem; opacity: 0.8; pointer-events: none; z-index: 1000; }" if AFFICHER_RAMADAN else ""
+# CSS du palmier — affiché en haut à droite
+decor_css = "body::after { content: '🌴'; position: fixed; top: 20px; right: 20px; font-size: 2.5rem; opacity: 0.8; pointer-events: none; z-index: 1000; }" if AFFICHER_MESSAGE_ETE else ""
 
 # ==========================================
 # 🚧 4. PAGE DE MAINTENANCE
@@ -153,13 +141,6 @@ if MODE_MAINTENANCE:
         footer {{ text-align: center; padding: 30px; font-size: 1rem; color: #64748b; margin-top: auto; }}
         .boss-name {{ color: var(--primary); font-weight: 900; font-size: 1.2rem; }}
     </style>
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-PWQN6WBSV4"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){{dataLayer.push(arguments);}}
-      gtag('js', new Date());
-      gtag('config', 'G-PWQN6WBSV4');
-    </script>
 </head>
 <body>
     <header>
@@ -292,7 +273,9 @@ else:
 
     display_login = "flex" if MOT_DE_PASSE_ACTIF else "none"
     display_main  = "none" if MOT_DE_PASSE_ACTIF else "block"
-    ramadan_html  = '<div class="ramadan-message">🌙 Ramadan Mubarak ! ✨</div>' if AFFICHER_RAMADAN else ''
+    
+    # HTML du message d'été
+    message_ete_html  = '<div class="special-message">☀️ Plus que deux mois avant l\'été ! 🌴</div>' if AFFICHER_MESSAGE_ETE else ''
 
     html_complet = f"""<!DOCTYPE html>
 <html lang="fr">
@@ -309,7 +292,7 @@ else:
         }}
         @media (prefers-color-scheme: dark) {{
             :root {{ --bg: #0f172a; --card: #1e293b; --text: #f1f5f9; --border: #334155; --link-bg: #0f172a; --link-hover: #334155; --subtitle-bg: #1e293b; --subtitle-hover: #334155; }}
-            .ramadan-message {{ background: #431407 !important; color: #fdba74 !important; border-color: #c2410c !important; }}
+            .special-message {{ background: #0c4a6e !important; color: #38bdf8 !important; border-color: #0284c7 !important; }}
             .subtitle, footer {{ color: #94a3b8 !important; }}
             .file-link {{ color: #cbd5e1 !important; }}
             .nav-card {{ background: #1e293b !important; }}
@@ -318,7 +301,7 @@ else:
         }}
         * {{ box-sizing: border-box; }}
         body {{ font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); padding: 0; line-height: 1.5; margin: 0; transition: background 0.3s, color 0.3s; scroll-behavior: smooth; }}
-        {lune_css}
+        {decor_css}
 
         /* ── LOGIN ── */
         #login-screen {{ position: fixed; top: 0; left: 0; width: 100%; height: 100vh; background: var(--bg); display: {display_login}; align-items: center; justify-content: center; z-index: 9999; }}
@@ -337,7 +320,7 @@ else:
         header {{ text-align: center; padding: 30px; background: var(--card); border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border-bottom: 4px solid var(--primary); max-width: 1160px; margin: 0 auto 30px auto; transition: background 0.3s; }}
         h1 {{ margin: 0; color: var(--primary); font-size: 2rem; }}
         .subtitle {{ font-size: 1.1rem; color: #64748b; margin-top: 5px; font-weight: 500; }}
-        .ramadan-message {{ margin-top: 15px; font-size: 0.9rem; background: #fff7ed; color: #c2410c; padding: 8px 20px; border-radius: 20px; display: inline-block; border: 1px solid #fdba74; font-weight: bold; }}
+        .special-message {{ margin-top: 15px; font-size: 0.9rem; background: #e0f2fe; color: #0369a1; padding: 8px 20px; border-radius: 20px; display: inline-block; border: 1px solid #7dd3fc; font-weight: bold; }}
 
         /* ── BREADCRUMB ── */
         .breadcrumb {{ display: none; align-items: center; gap: 8px; max-width: 1200px; margin: 0 auto 20px auto; background: var(--card); padding: 12px 20px; border-radius: 12px; border: 1px solid var(--border); flex-wrap: wrap; }}
@@ -438,7 +421,7 @@ else:
     <header>
         <h1>🎓 Drive Universitaire</h1>
         <div class="subtitle">GI • MRT • GE | <b>{total_fichiers} documents</b></div>
-        {ramadan_html}
+        {message_ete_html}
     </header>
 
     <div class="breadcrumb" id="breadcrumb">
