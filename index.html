@@ -13,7 +13,7 @@
         }
         @media (prefers-color-scheme: dark) {
             :root { --bg: #0f172a; --card: #1e293b; --text: #f1f5f9; --border: #334155; --link-bg: #0f172a; --link-hover: #334155; --subtitle-bg: #1e293b; --subtitle-hover: #334155; }
-            .ramadan-message { background: #431407 !important; color: #fdba74 !important; border-color: #c2410c !important; }
+            .special-message { background: #0c4a6e !important; color: #38bdf8 !important; border-color: #0284c7 !important; }
             .subtitle, footer { color: #94a3b8 !important; }
             .file-link { color: #cbd5e1 !important; }
             .nav-card { background: #1e293b !important; }
@@ -22,7 +22,7 @@
         }
         * { box-sizing: border-box; }
         body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); padding: 0; line-height: 1.5; margin: 0; transition: background 0.3s, color 0.3s; scroll-behavior: smooth; }
-        body::after { content: '🌙'; position: fixed; top: 20px; right: 20px; font-size: 2.5rem; opacity: 0.8; pointer-events: none; z-index: 1000; }
+        body::after { content: '🌴'; position: fixed; top: 20px; right: 20px; font-size: 2.5rem; opacity: 0.8; pointer-events: none; z-index: 1000; }
 
         /* ── LOGIN ── */
         #login-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100vh; background: var(--bg); display: none; align-items: center; justify-content: center; z-index: 9999; }
@@ -41,7 +41,7 @@
         header { text-align: center; padding: 30px; background: var(--card); border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border-bottom: 4px solid var(--primary); max-width: 1160px; margin: 0 auto 30px auto; transition: background 0.3s; }
         h1 { margin: 0; color: var(--primary); font-size: 2rem; }
         .subtitle { font-size: 1.1rem; color: #64748b; margin-top: 5px; font-weight: 500; }
-        .ramadan-message { margin-top: 15px; font-size: 0.9rem; background: #fff7ed; color: #c2410c; padding: 8px 20px; border-radius: 20px; display: inline-block; border: 1px solid #fdba74; font-weight: bold; }
+        .special-message { margin-top: 15px; font-size: 0.9rem; background: #e0f2fe; color: #0369a1; padding: 8px 20px; border-radius: 20px; display: inline-block; border: 1px solid #7dd3fc; font-weight: bold; }
 
         /* ── BREADCRUMB ── */
         .breadcrumb { display: none; align-items: center; gap: 8px; max-width: 1200px; margin: 0 auto 20px auto; background: var(--card); padding: 12px 20px; border-radius: 12px; border: 1px solid var(--border); flex-wrap: wrap; }
@@ -142,7 +142,7 @@
     <header>
         <h1>🎓 Drive Universitaire</h1>
         <div class="subtitle">GI • MRT • GE | <b>42 documents</b></div>
-        <div class="ramadan-message">🌙 Ramadan Mubarak ! ✨</div>
+        <div class="special-message">☀️ Plus que deux mois avant l'été ! 🌴</div>
     </header>
 
     <div class="breadcrumb" id="breadcrumb">
