@@ -6,115 +6,116 @@
     <title>Drive Universitaire</title>
     <style>
         :root {
-            --primary: #d4af37; --bg: #f8fafc; --card: #ffffff;
-            --text: #1e293b; --border: #e2e8f0;
-            --link-bg: #f8fafc; --link-hover: #fffbeb;
-            --subtitle-bg: #ffffff; --subtitle-hover: #f1f5f9;
+            --primary: #d4af37; --bg: #f8fafc; --card: rgba(255, 255, 255, 0.9);
+            --text: #1e293b; --border: rgba(226, 232, 240, 0.8);
+            --link-bg: rgba(248, 250, 252, 0.8); --link-hover: #fffbeb;
+            --subtitle-bg: rgba(255, 255, 255, 0.8); --subtitle-hover: rgba(241, 245, 249, 0.9);
         }
         @media (prefers-color-scheme: dark) {
-            :root { --bg: #0f172a; --card: #1e293b; --text: #f1f5f9; --border: #334155; --link-bg: #0f172a; --link-hover: #334155; --subtitle-bg: #1e293b; --subtitle-hover: #334155; }
+            :root { --card: rgba(30, 41, 59, 0.9); --text: #f1f5f9; --border: rgba(51, 65, 85, 0.8); --link-bg: rgba(15, 23, 42, 0.8); --link-hover: #334155; --subtitle-bg: rgba(30, 41, 59, 0.8); --subtitle-hover: rgba(51, 65, 85, 0.9); }
             .special-message { background: #0c4a6e !important; color: #38bdf8 !important; border-color: #0284c7 !important; }
-            .subtitle, footer { color: #94a3b8 !important; }
+            .subtitle, footer { color: #e2e8f0 !important; text-shadow: 1px 1px 2px #000; }
             .file-link { color: #cbd5e1 !important; }
-            .nav-card { background: #1e293b !important; }
-            .nav-card:hover { background: #263044 !important; }
-            .breadcrumb { background: #1e293b !important; border-color: #334155 !important; }
+            .nav-card { background: rgba(30, 41, 59, 0.9) !important; }
+            .nav-card:hover { background: rgba(38, 48, 68, 0.95) !important; }
+            .breadcrumb { background: rgba(30, 41, 59, 0.9) !important; border-color: rgba(51, 65, 85, 0.8) !important; }
         }
         * { box-sizing: border-box; }
-        body { font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); padding: 0; line-height: 1.5; margin: 0; transition: background 0.3s, color 0.3s; scroll-behavior: smooth; }
+        
+        /* ICI C'EST LE FOND D'ÉCRAN ! */
+        body { 
+            font-family: 'Inter', system-ui, sans-serif; 
+            background: url('fond.png') no-repeat center center fixed; 
+            background-size: cover;
+            color: var(--text); 
+            padding: 0; 
+            line-height: 1.5; 
+            margin: 0; 
+            transition: color 0.3s; 
+            scroll-behavior: smooth; 
+        }
+        
         body::after { content: '🌴'; position: fixed; top: 20px; right: 20px; font-size: 2.5rem; opacity: 0.8; pointer-events: none; z-index: 1000; }
 
-        /* ── LOGIN ── */
-        #login-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100vh; background: var(--bg); display: none; align-items: center; justify-content: center; z-index: 9999; }
-        .login-box { background: var(--card); padding: 40px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); border: 1px solid var(--border); text-align: center; max-width: 350px; width: 90%; }
+        #login-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100vh; background: rgba(0,0,0,0.5); backdrop-filter: blur(5px); display: none; align-items: center; justify-content: center; z-index: 9999; }
+        .login-box { background: var(--card); padding: 40px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); border: 1px solid var(--border); text-align: center; max-width: 350px; width: 90%; backdrop-filter: blur(10px); }
         .login-box h2 { color: var(--primary); margin-top: 0; font-size: 1.8rem; margin-bottom: 5px; }
         .login-box p { color: #64748b; font-size: 0.9rem; margin-bottom: 25px; }
-        .login-box input { width: 100%; padding: 12px; margin-bottom: 15px; border: 2px solid var(--border); border-radius: 8px; background: var(--bg); color: var(--text); outline: none; transition: 0.2s; }
+        .login-box input { width: 100%; padding: 12px; margin-bottom: 15px; border: 2px solid var(--border); border-radius: 8px; background: rgba(255,255,255,0.5); color: var(--text); outline: none; transition: 0.2s; }
         .login-box input:focus { border-color: var(--primary); }
         .login-box button { width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 1rem; font-weight: bold; cursor: pointer; transition: 0.2s; }
         .login-box button:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(212,175,55,0.4); }
         #login-error { color: #ef4444; font-size: 0.85rem; margin-top: 15px; display: none; font-weight: bold; }
         .login-warning { font-size: 0.75rem; color: #94a3b8; margin-top: 20px; }
 
-        /* ── LAYOUT ── */
         #main-content { display: block; padding: 20px; min-height: 100vh; }
-        header { text-align: center; padding: 30px; background: var(--card); border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border-bottom: 4px solid var(--primary); max-width: 1160px; margin: 0 auto 30px auto; transition: background 0.3s; }
+        header { text-align: center; padding: 30px; background: var(--card); border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.2); border-bottom: 4px solid var(--primary); max-width: 1160px; margin: 0 auto 30px auto; backdrop-filter: blur(10px); }
         h1 { margin: 0; color: var(--primary); font-size: 2rem; }
-        .subtitle { font-size: 1.1rem; color: #64748b; margin-top: 5px; font-weight: 500; }
+        .subtitle { font-size: 1.1rem; color: #1e293b; margin-top: 5px; font-weight: bold; }
         .special-message { margin-top: 15px; font-size: 0.9rem; background: #e0f2fe; color: #0369a1; padding: 8px 20px; border-radius: 20px; display: inline-block; border: 1px solid #7dd3fc; font-weight: bold; }
 
-        /* ── BREADCRUMB ── */
-        .breadcrumb { display: none; align-items: center; gap: 8px; max-width: 1200px; margin: 0 auto 20px auto; background: var(--card); padding: 12px 20px; border-radius: 12px; border: 1px solid var(--border); flex-wrap: wrap; }
+        .breadcrumb { display: none; align-items: center; gap: 8px; max-width: 1200px; margin: 0 auto 20px auto; background: var(--card); padding: 12px 20px; border-radius: 12px; border: 1px solid var(--border); flex-wrap: wrap; backdrop-filter: blur(10px); }
         .breadcrumb.visible { display: flex; }
-        .bc-item { color: #94a3b8; font-size: 0.9rem; }
+        .bc-item { color: var(--text); font-size: 0.9rem; font-weight: 500; }
         .bc-item.link { color: var(--primary); cursor: pointer; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }
         .bc-item.link:hover { opacity: 0.75; }
         .bc-sep { color: #cbd5e1; font-size: 0.8rem; }
         .btn-retour { margin-left: auto; padding: 6px 16px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 0.85rem; font-weight: bold; cursor: pointer; transition: 0.2s; }
         .btn-retour:hover { transform: translateY(-1px); box-shadow: 0 3px 10px rgba(212,175,55,0.4); }
 
-        /* ── ÉCRANS ── */
         .screen { display: none; max-width: 1200px; margin: 0 auto; animation: fadeIn 0.25s ease; }
         .screen.active { display: block; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .screen-title { font-size: 1.3rem; font-weight: 800; margin-bottom: 20px; color: var(--text); }
+        .screen-title { font-size: 1.3rem; font-weight: 800; margin-bottom: 20px; color: var(--text); background: var(--card); display: inline-block; padding: 5px 15px; border-radius: 8px; backdrop-filter: blur(10px); }
         .screen-title span { color: var(--primary); }
 
-        /* ── GRILLES NAV ── */
         .nav-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; }
-        .nav-card { background: var(--card); border: 2px solid var(--border); border-radius: 16px; padding: 30px 20px; text-align: center; cursor: pointer; transition: all 0.25s; }
-        .nav-card:hover { border-color: var(--primary); transform: translateY(-4px); box-shadow: 0 10px 25px rgba(212,175,55,0.2); }
+        .nav-card { background: var(--card); border: 2px solid var(--border); border-radius: 16px; padding: 30px 20px; text-align: center; cursor: pointer; transition: all 0.25s; backdrop-filter: blur(10px); }
+        .nav-card:hover { border-color: var(--primary); transform: translateY(-4px); box-shadow: 0 10px 25px rgba(212,175,55,0.4); }
         .nav-card-icon { font-size: 3rem; margin-bottom: 12px; }
         .nav-card-title { font-size: 1.1rem; font-weight: 800; color: var(--text); margin-bottom: 5px; }
-        .nav-card-sub { font-size: 0.85rem; color: #94a3b8; }
+        .nav-card-sub { font-size: 0.85rem; color: var(--text); opacity: 0.8; }
 
-        /* ── FILTRE ── */
         .filters { display: flex; gap: 15px; justify-content: center; margin-bottom: 25px; flex-wrap: wrap; }
         .search-container { width: 100%; max-width: 340px; }
-        input[type="text"] { width: 100%; padding: 10px 15px; border-radius: 25px; border: 2px solid var(--border); background: var(--bg); color: var(--text); font-size: 0.95rem; outline: none; transition: 0.3s; }
+        input[type="text"] { width: 100%; padding: 10px 15px; border-radius: 25px; border: 2px solid var(--border); background: var(--card); color: var(--text); font-size: 0.95rem; outline: none; transition: 0.3s; backdrop-filter: blur(10px); }
         input[type="text"]:focus { border-color: var(--primary); box-shadow: 0 0 10px rgba(212,175,55,0.3); }
 
-        /* ── CARTES MATIÈRES ── */
         .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; }
-        .card { background: var(--card); border-radius: 12px; padding: 20px; border: 1px solid var(--border); transition: all 0.3s; }
-        .card:hover { transform: translateY(-3px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.2); }
-        .card-badge { font-size: 0.7rem; color: #fff; background: var(--primary); padding: 3px 8px; border-radius: 12px; display: inline-block; margin-bottom: 10px; font-weight: bold; }
+        .card { background: var(--card); border-radius: 12px; padding: 20px; border: 1px solid var(--border); transition: all 0.3s; backdrop-filter: blur(10px); }
+        .card:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(0,0,0,0.3); }
+        .card-badge { font-size: 0.7rem; color: #fff; background: var(--primary); padding: 3px 8px; border-radius: 12px; display: inline-block; margin-bottom: 10px; font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
         h2 { font-size: 1.1rem; margin: 0 0 15px 0; padding-bottom: 10px; border-bottom: 2px solid var(--border); display: flex; align-items: center; gap: 10px; }
 
         details.sub-section { margin-bottom: 12px; background: var(--link-bg); border-radius: 8px; border: 1px solid var(--border); overflow: hidden; }
         summary.sub-title { font-size: 0.95rem; font-weight: bold; color: var(--text); padding: 12px 15px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; background: var(--subtitle-bg); transition: 0.2s; list-style: none; user-select: none; }
         summary.sub-title::-webkit-details-marker { display: none; }
         summary.sub-title:hover { background: var(--subtitle-hover); }
-        summary.sub-title::after { content: '▼'; font-size: 0.8rem; color: #94a3b8; transition: transform 0.3s; }
+        summary.sub-title::after { content: '▼'; font-size: 0.8rem; color: var(--text); opacity: 0.6; transition: transform 0.3s; }
         details[open] summary.sub-title::after { transform: rotate(180deg); }
         details[open] summary.sub-title { border-bottom: 1px solid var(--border); }
         .folder-content { padding: 12px; display: flex; flex-direction: column; gap: 8px; }
 
-        .file-link { display: flex; align-items: center; text-decoration: none; color: #475569; padding: 10px; background: var(--subtitle-bg); border-radius: 8px; font-size: 0.9rem; border: 1px solid var(--border); transition: all 0.2s; }
+        .file-link { display: flex; align-items: center; text-decoration: none; color: var(--text); padding: 10px; background: var(--subtitle-bg); border-radius: 8px; font-size: 0.9rem; border: 1px solid var(--border); transition: all 0.2s; }
         .file-link:hover { background: var(--link-hover); border-color: var(--primary); color: var(--primary) !important; transform: translateX(5px); }
-        .file-size { font-size: 0.75rem; color: #94a3b8; margin-left: auto; font-weight: normal; }
+        .file-size { font-size: 0.75rem; opacity: 0.6; margin-left: auto; font-weight: normal; }
 
-        /* ── TAGS ── */
         .tag { font-size: 0.65rem; font-weight: 800; padding: 3px 7px; border-radius: 5px; margin-right: 10px; text-transform: uppercase; }
         .tag-cours  { background: rgba(245,158,11,0.2);  color: #d97706; border: 1px solid rgba(245,158,11,0.3); }
         .tag-td     { background: rgba(34,197,94,0.2);   color: #16a34a; border: 1px solid rgba(34,197,94,0.3); }
         .tag-tp     { background: rgba(56,189,248,0.2);  color: #0284c7; border: 1px solid rgba(56,189,248,0.3); }
         .tag-sujet  { background: rgba(168,85,247,0.2);  color: #9333ea; border: 1px solid rgba(168,85,247,0.3); }
 
-        /* ── AUCUN RÉSULTAT ── */
-        #no-result { display: none; text-align: center; padding: 60px 20px; color: #94a3b8; font-size: 1.1rem; }
+        #no-result { display: none; text-align: center; padding: 60px 20px; color: var(--text); background: var(--card); border-radius: 12px; margin-top: 20px; font-size: 1.1rem; backdrop-filter: blur(10px); }
         #no-result span { font-size: 3rem; display: block; margin-bottom: 15px; }
 
-        /* ── RETOUR EN HAUT ── */
         #backToTop { display: none; position: fixed; bottom: 30px; right: 30px; z-index: 99; font-size: 1.5rem; border: none; outline: none; background-color: var(--primary); color: white; cursor: pointer; border-radius: 50%; width: 50px; height: 50px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); transition: 0.3s; justify-content: center; align-items: center; opacity: 0; pointer-events: none; }
         #backToTop.show { opacity: 1; pointer-events: auto; display: flex; }
         #backToTop:hover { transform: translateY(-5px); box-shadow: 0 6px 15px rgba(212,175,55,0.5); }
 
-        /* ── FOOTER ── */
-        footer { text-align: center; margin-top: 60px; padding: 30px; font-size: 0.95rem; color: #64748b; border-top: 1px solid var(--border); line-height: 1.8; }
-        .boss-name { color: var(--primary); font-weight: 900; font-size: 1.1rem; }
-        .copyright { font-size: 0.8rem; color: #94a3b8; margin-top: 10px; padding-top: 15px; border-top: 1px solid var(--border); line-height: 1.7; }
-        .copyright small { font-size: 0.75rem; opacity: 0.8; font-style: italic; }
+        footer { text-align: center; margin-top: 60px; padding: 30px; font-size: 0.95rem; color: #ffffff; text-shadow: 1px 1px 3px rgba(0,0,0,0.8); line-height: 1.8; }
+        .boss-name { color: var(--primary); font-weight: 900; font-size: 1.1rem; text-shadow: 1px 1px 3px rgba(0,0,0,0.8); }
+        .copyright { font-size: 0.8rem; margin-top: 10px; padding-top: 15px; line-height: 1.7; }
     </style>
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-PWQN6WBSV4"></script>
     <script>
@@ -156,22 +157,7 @@
 
     <div class="screen active" id="screen-annees">
         <p class="screen-title">Choisissez une <span>année</span> :</p>
-        <div class="nav-grid">
-        <div class="nav-card" onclick="goFiliere('L1')">
-            <div class="nav-card-icon">📘</div>
-            <div class="nav-card-title">Licence 1</div>
-            <div class="nav-card-sub">11 matières</div>
-        </div>
-        <div class="nav-card" onclick="goFiliere('L2')">
-            <div class="nav-card-icon">📗</div>
-            <div class="nav-card-title">Licence 2</div>
-            <div class="nav-card-sub">Aucun document</div>
-        </div>
-        <div class="nav-card" onclick="goFiliere('L3')">
-            <div class="nav-card-icon">📕</div>
-            <div class="nav-card-title">Licence 3</div>
-            <div class="nav-card-sub">Aucun document</div>
-        </div></div>
+        <div class="nav-grid"><div class="nav-card" onclick="goFiliere('L1')"><div class="nav-card-icon">📘</div><div class="nav-card-title">Licence 1</div><div class="nav-card-sub">11 matière(s)</div></div><div class="nav-card" onclick="goFiliere('L2')"><div class="nav-card-icon">📗</div><div class="nav-card-title">Licence 2</div><div class="nav-card-sub">Aucun document</div></div><div class="nav-card" onclick="goFiliere('L3')"><div class="nav-card-icon">📕</div><div class="nav-card-title">Licence 3</div><div class="nav-card-sub">Aucun document</div></div></div>
     </div>
 
     <div class="screen" id="screen-filieres">
@@ -242,7 +228,6 @@
         By <span class="boss-name">Farhan Abdoul-Mougni Farhan</span>
         <div class="copyright">
             © 2026 Farhan Abdoul-Mougni Farhan — Tous droits réservés.<br>
-            <small>Toute reproduction, copie ou redistribution de ce code est strictement interdite sans autorisation écrite.</small>
         </div>
     </footer>
 </div>
@@ -256,7 +241,6 @@ let currentAnnee   = null;
 let currentFiliere = null;
 let navHistory     = [];
 
-// ── LOGIN ──────────────────────────────────────────────────────────────
 function verifierLogin() {
     var user = document.getElementById("username").value;
     var pass = document.getElementById("password").value;
@@ -282,7 +266,6 @@ document.getElementById("password").addEventListener("keypress", e => {
     if (e.key === "Enter") verifierLogin();
 });
 
-// ── NAVIGATION ─────────────────────────────────────────────────────────
 function showScreen(id) {
     document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
     document.getElementById(id).classList.add('active');
@@ -395,7 +378,6 @@ function goHome() {
     updateBreadcrumb();
 }
 
-// ── RECHERCHE ──────────────────────────────────────────────────────────
 document.getElementById('searchBar').addEventListener('keyup', function() {
     const term = this.value.toLowerCase().trim();
     let count  = 0;
@@ -430,7 +412,6 @@ document.getElementById('searchBar').addEventListener('keyup', function() {
     document.getElementById('no-result').style.display = count === 0 ? 'block' : 'none';
 });
 
-// ── RETOUR EN HAUT ─────────────────────────────────────────────────────
 const btn = document.getElementById("backToTop");
 window.onscroll = () => btn.classList.toggle("show", document.documentElement.scrollTop > 300);
 btn.onclick     = () => window.scrollTo({ top: 0, behavior: 'smooth' });
