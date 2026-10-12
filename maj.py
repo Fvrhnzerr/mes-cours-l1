@@ -1,691 +1,778 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Drive Universitaire — générateur du site (v2 · design académique)
+
+Utilisation :
+    python3 maj.py           → synchronise avec GitHub, génère index.html, commit + push
+    python3 maj.py --local   → génère seulement index.html (aucune commande git), pour tester
+
+Organisation des dossiers (inchangée) :
+    cours/<FILIERE>/<ANNEE>/<Matière>/<Cours|TD|TP|Sujets...>/<fichiers>
+    ex : cours/GI/L2/Base de données/TD/TD1.pdf
+"""
 import os
-import subprocess
-import datetime
+import re
+import sys
 import json
+import time
+import datetime
+import subprocess
+import unicodedata
+
+LOCAL = "--local" in sys.argv
 
 # ==========================================
-# 🔄 0. SYNCHRONISATION AUTOMATIQUE
+# ⚙️ 1. PARAMÈTRES ET INTERRUPTEURS
 # ==========================================
-print("🔄 Vérification du Cloud (récupération des fichiers de l'iPad)...")
-try:
-    # S'assurer qu'on est bien sur main (corrige le detached HEAD)
-    subprocess.run(["git", "checkout", "main"], check=True, capture_output=True)
-    # Mettre de côté les changements locaux pour pouvoir puller proprement
-    subprocess.run(["git", "stash"], check=True, capture_output=True)
-    # Récupérer les nouveaux fichiers de l'iPad
-    subprocess.run(["git", "pull", "--rebase", "origin", "main"], check=True, capture_output=True, text=True)
-    # Remettre les changements locaux par-dessus
-    subprocess.run(["git", "stash", "pop"], capture_output=True)
-    print("✅ Mac parfaitement synchronisé avec le Cloud !")
-except subprocess.CalledProcessError as e:
-    print(f"⚠️ Impossible de synchroniser : {e.stderr.strip() or 'Conflit mineur'}. On continue !")
-
-# ==========================================
-# ⚙️ 1. PARAMÈTRES GÉNÉRAUX ET INTERRUPTEURS
-# ==========================================
-NOM_UTILISATEUR          = "Fvrhnzerr"
-NOM_SIGNATURE_NORMAL     = "Farhan Abdoul-Mougni Farhan"
+NOM_SIGNATURE_NORMAL      = "Farhan Abdoul-Mougni Farhan"
 NOM_SIGNATURE_MAINTENANCE = "Farhan&Co"
-NOM_REPO                 = "mes-cours-l1"
 
-# 🛑 LE BOUTON MAINTENANCE (True = Fermé avec panneau / False = Ouvert)
+# 🛑 Maintenance (True = site fermé avec panneau / False = ouvert)
 MODE_MAINTENANCE = False
 
-# 🔓 LE BOUTON MOT DE PASSE (True = Code requis / False = Accès direct)
+# 🔓 Mot de passe (True = code requis / False = accès direct)
+#    ⚠️ Protection basique : les identifiants restent lisibles dans le code de la page.
 MOT_DE_PASSE_ACTIF = False
-
-# 🔐 IDENTIFIANTS (La correction magique est ici !)
-# Si GitHub ne donne rien, on prend L1GI et IAD2026 par défaut
 LOGIN_REQUIS = os.environ.get("DRIVE_LOGIN") or "L1GI"
 MDP_REQUIS   = os.environ.get("DRIVE_MDP") or "IAD2026"
 
+# 📣 Bandeau sous l'en-tête ("" = pas de bandeau)
+#    ex : "☀️ Plus que deux mois avant l'été !"  ou  "🌙 Ramadan Mubarak !"
+MESSAGE_SPECIAL = ""
+
+# 🆕 Un fichier est marqué « Nouveau » pendant ce nombre de jours après son ajout
+NOUVEAU_JOURS = 14
+
+GOOGLE_ANALYTICS_ID = "G-PWQN6WBSV4"
+DOSSIER_COURS = "cours"
+
 # ==========================================
-# 📁 2. CONFIGURATION DES DOSSIERS
+# 📁 2. NOMS AFFICHÉS
 # ==========================================
-noms_filieres = {
-    "GI":  "💻 Génie Informatique",
-    "MRT": "📡 Maintenance Réseau Telecom",
-    "GE":  "📊 Gestion des Entreprises"
+FILIERES = {
+    "GI":  "Génie Informatique",
+    "MRT": "Maintenance Réseau Télécom",
+    "GE":  "Gestion des Entreprises",
 }
 
-noms_annees = {
-    "L1": "Licence 1",
-    "L2": "Licence 2",
-    "L3": "Licence 3"
+# Clés « normalisées » : minuscules, sans accents, espaces/tirets → _
+# Si une matière n'est pas listée, son nom de dossier est utilisé tel quel.
+NOMS_MATIERES = {
+    "algebre_lineaire":             "Algèbre linéaire",
+    "algebre":                      "Algèbre linéaire",
+    "algo_avancee":                 "Algorithmique avancée",
+    "algorithme_avance":            "Algorithmique avancée",
+    "algo":                         "Algorithmique",
+    "system_exploitation":          "Système d'exploitation",
+    "systeme_exploitation":         "Système d'exploitation",
+    "web":                          "Développement Web",
+    "dev_web":                      "Développement Web",
+    "system_logique":               "Systèmes logiques",
+    "systeme_logique":              "Systèmes logiques",
+    "cisco":                        "CISCO",
+    "francais":                     "Français",
+    "reseau":                       "Réseau",
+    "tec1":                         "TEC1",
+    "tec2":                         "TEC2",
+    "anglais":                      "Anglais",
+    "architecture_des_ordinateurs": "Architecture des ordinateurs",
+    "architecture_ordinateurs":     "Architecture des ordinateurs",
+    "analyse_math":                 "Analyse mathématique",
+    "base_de_donnees":              "Base de données",
+    "base_donnees":                 "Base de données",
+    "statisque":                    "Statistique",
+    "statistique":                  "Statistique",
+    "mercatique":                   "Mercatique",
 }
 
-# ✅ Dictionnaire propre — clés en minuscules uniquement
-noms_matieres_base = {
-    "algebre_lineaire":             "📐 Algèbre Linéaire",
-    "algebre lineaire":             "📐 Algèbre Linéaire",
-    "algebre":                      "📐 Algèbre Linéaire",
-    "algo_avancee":                 "🧬 Algorithme Avancée",
-    "algo avancee":                 "🧬 Algorithme Avancée",
-    "algorithme_avance":            "🧬 Algorithme Avancée",
-    "algo":                         "🧬 Algorithmique",
-    "system_exploitation":          "💻 Système d'Exploitation",
-    "systeme_exploitation":         "💻 Système d'Exploitation",
-    "web":                          "🌐 Développement Web",
-    "dev_web":                      "🌐 Développement Web",
-    "system_logique":               "🔢 Système Logique",
-    "systeme_logique":              "🔢 Système Logique",
-    "cisco":                        "📡 CISCO",
-    "francais":                     "📚 Français",
-    "français":                     "📚 Français",
-    "reseau":                       "🌐 Réseau",
-    "réseau":                       "🌐 Réseau",
-    "tec1":                         "📝 TEC1",
-    "anglais":                      "🇬🇧 Anglais",
-    "architecture des ordinateurs": "🖥️ Architecture des Ordinateurs",
-    "architecture_ordinateurs":     "🖥️ Architecture des Ordinateurs",
-    "analyse-math":                 "📊 Analyse & Mathématiques",
-    "analyse_math":                 "📊 Analyse & Mathématiques",
-    "analyse math":                 "📊 Analyse & Mathématiques",
-    "base de données":              "🗄️ Base de Données",
-    "base_de_donnees":              "🗄️ Base de Données",
-    "base_donnees":                 "🗄️ Base de Données",
-}
-
-def get_nom_matiere(matiere):
-    """Retourne le nom affiché d'une matière (insensible à la casse)."""
-    key = matiere.lower().strip()
-    return noms_matieres_base.get(key) or "📚 " + matiere.replace("_", " ").capitalize()
-
-extensions_valides = (
-    '.pdf', '.doc', '.docx', '.ppt', '.pptx', '.xls', '.xlsx',
-    '.txt', '.png', '.jpg', '.jpeg', '.zip', '.rar',
-    '.c', '.cpp', '.py', '.java', '.html', '.css', '.js', '.heic'
+EXTENSIONS_VALIDES = (
+    ".pdf", ".doc", ".docx", ".ppt", ".pptx", ".xls", ".xlsx",
+    ".txt", ".png", ".jpg", ".jpeg", ".gif", ".webp", ".heic", ".zip", ".rar",
+    ".c", ".cpp", ".h", ".py", ".java", ".html", ".css", ".js", ".sql",
 )
 
-KEYWORDS_SUJET = [
-    "sujet entrainement", "sujet entraînement",
-    "sujet_entrainement", "sujet_entraînement",
-    "sujet révision", "sujet revision",
-    "sujet_révision", "sujet_revision",
-    "sujets", "sujet", "révision", "revision",
-    "entrainement", "entraînement",
-]
+# Un dossier dont le nom contient un de ces mots → « Sujets d'entraînement »
+MOTS_SUJET = ("sujet", "revision", "entrainement", "examen", "annale", "partiel")
 
-def est_dossier_sujet(chemin):
-    nom = os.path.basename(chemin).lower().strip()
-    for kw in KEYWORDS_SUJET:
-        if kw in nom:
-            return True
-    return False
+
+def norm(texte):
+    """minuscules, sans accents, espaces/tirets → _"""
+    t = unicodedata.normalize("NFD", texte)
+    t = "".join(c for c in t if unicodedata.category(c) != "Mn")
+    return re.sub(r"[\s\-]+", "_", t.lower().strip())
+
+
+def nom_matiere(dossier):
+    return NOMS_MATIERES.get(norm(dossier)) or dossier.replace("_", " ").strip()[:1].upper() + dossier.replace("_", " ").strip()[1:]
+
+
+def mot(cle, texte):
+    """True si `cle` apparaît comme mot isolé (td, tp...) dans `texte` normalisé."""
+    return re.search(rf"(^|[^a-z]){cle}([^a-z]|$)", texte) is not None
+
+
+def categorie(sous_dossiers, fichier):
+    """Classe un fichier : cours / td / tp / sujet. Le dossier le plus proche décide."""
+    for d in reversed([norm(x) for x in sous_dossiers]):
+        if any(k in d for k in MOTS_SUJET):
+            return "sujet"
+        if mot("td", d):
+            return "td"
+        if mot("tp", d):
+            return "tp"
+        if "cours" in d or d.startswith("chap"):
+            return "cours"
+    f = norm(os.path.splitext(fichier)[0])
+    if mot("td", f):
+        return "td"
+    if mot("tp", f):
+        return "tp"
+    return "cours"
+
+
+def git(*args):
+    return subprocess.run(["git", *args], capture_output=True, text=True)
+
+
+def dates_ajout_git():
+    """Date d'ajout de chaque fichier d'après l'historique git (pour le badge « Nouveau »)."""
+    dates = {}
+    try:
+        r = git("-c", "core.quotepath=off", "log", "--diff-filter=A",
+                "--format=@%ct", "--name-only", "--", DOSSIER_COURS)
+    except FileNotFoundError:
+        return dates
+    if r.returncode != 0:
+        return dates
+    ts = None
+    for ligne in r.stdout.splitlines():
+        if ligne.startswith("@"):
+            ts = int(ligne[1:])
+        elif ligne and ts:
+            dates.setdefault(unicodedata.normalize("NFC", ligne), ts)
+    return dates
+
 
 # ==========================================
-# 🌴 3. MESSAGE SPÉCIAL ÉTÉ
+# 🔄 3. SYNCHRONISATION (récupère les fichiers ajoutés depuis l'iPad)
 # ==========================================
-AFFICHER_MESSAGE_ETE = True
+if not LOCAL:
+    print("🔄 Synchronisation avec GitHub...")
+    try:
+        subprocess.run(["git", "checkout", "main"], check=True, capture_output=True)
+        stash = git("stash")
+        a_stashe = "No local changes" not in stash.stdout and stash.returncode == 0
+        subprocess.run(["git", "pull", "--rebase", "origin", "main"],
+                       check=True, capture_output=True, text=True)
+        if a_stashe:
+            git("stash", "pop")
+        print("✅ Synchronisé avec GitHub.")
+    except subprocess.CalledProcessError as e:
+        print(f"⚠️ Synchronisation impossible : {(e.stderr or '').strip() or 'conflit mineur'}. On continue.")
 
-# CSS du palmier — affiché en haut à droite
-decor_css = "body::after { content: '🌴'; position: fixed; top: 20px; right: 20px; font-size: 2.5rem; opacity: 0.8; pointer-events: none; z-index: 1000; }" if AFFICHER_MESSAGE_ETE else ""
+maintenant = datetime.datetime.now()
+date_maj = maintenant.strftime("%d/%m/%Y à %H:%M")
 
 # ==========================================
 # 🚧 4. PAGE DE MAINTENANCE
 # ==========================================
-if MODE_MAINTENANCE:
-    html_complet = f"""<!DOCTYPE html>
+PAGE_MAINTENANCE = """<!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>En Maintenance - Drive Universitaire</title>
-    <style>
-        :root {{ --primary: #d4af37; --bg: #f8fafc; --card: #ffffff; --text: #1e293b; }}
-        @media (prefers-color-scheme: dark) {{ :root {{ --bg: #0f172a; --card: #1e293b; --text: #f1f5f9; }} }}
-        body {{ font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); padding: 20px; margin: 0; display: flex; flex-direction: column; min-height: 100vh; }}
-        header {{ text-align: center; margin: auto; padding: 40px; background: var(--card); border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); border-bottom: 4px solid var(--primary); max-width: 600px; width: 100%; box-sizing: border-box; }}
-        h1 {{ margin: 0 0 15px 0; color: var(--primary); font-size: 2.2rem; }}
-        p {{ font-size: 1.1rem; color: #64748b; margin: 5px 0; line-height: 1.5; }}
-        footer {{ text-align: center; padding: 30px; font-size: 1rem; color: #64748b; margin-top: auto; }}
-        .boss-name {{ color: var(--primary); font-weight: 900; font-size: 1.2rem; }}
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>En maintenance · Drive Universitaire</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,600;1,500&family=Source+Sans+3:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root { --bg:#f6f1e7; --paper:#fffdf8; --ink:#1c2738; --soft:#5b6475; --line:#e3dac8; --gold:#a8834a; --accent:#7b1e2b; }
+  @media (prefers-color-scheme: dark) { :root { --bg:#11151d; --paper:#181e29; --ink:#ebe4d4; --soft:#9aa2b1; --line:#2a3242; --gold:#c9a46a; --accent:#d9939a; } }
+  body { margin:0; min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:16px; box-sizing:border-box;
+         background:var(--bg); color:var(--ink); font-family:'Source Sans 3', system-ui, sans-serif; text-align:center; }
+  .box { background:var(--paper); border:1px solid var(--line); border-top:3px double var(--gold); border-radius:6px; padding:40px 28px; max-width:520px; width:100%; }
+  .fleuron { color:var(--gold); font-family:'Cormorant Garamond', serif; font-size:1.6rem; }
+  h1 { font-family:'Cormorant Garamond', Georgia, serif; font-weight:600; font-size:2.4rem; margin:6px 0 10px; }
+  p { color:var(--soft); margin:4px 0; }
+  footer { margin-top:28px; color:var(--soft); font-size:.9rem; }
+  footer b { font-family:'Cormorant Garamond', serif; font-size:1.15rem; color:var(--ink); }
+</style>
 </head>
 <body>
-    <header>
-        <h1>🚧 En Maintenance</h1>
-        <p>Le Drive Universitaire est actuellement en cours de mise à jour.</p>
-        <p>Revenez dans quelques minutes ! ✨</p>
-    </header>
-    <footer>By <span class="boss-name">{NOM_SIGNATURE_MAINTENANCE}</span></footer>
+  <div class="box">
+    <div class="fleuron">❦</div>
+    <h1>En maintenance</h1>
+    <p>Le Drive Universitaire est en cours de mise à jour.</p>
+    <p><i>Revenez dans quelques minutes.</i></p>
+  </div>
+  <footer>Par <b>__SIGNATURE__</b></footer>
 </body>
 </html>"""
 
 # ==========================================
-# 🎓 5. GÉNÉRATION DU SITE NORMAL
+# 🎓 5. PAGE PRINCIPALE (le contenu est injecté à la place des __MARQUEURS__)
 # ==========================================
-else:
-    maintenant = datetime.datetime.now()
-    date_maj = maintenant.strftime("%d/%m/%Y à %H:%M")
-
-    dossier_principal = "cours"
-    total_fichiers = 0
-    data = {}
-
-    if os.path.exists(dossier_principal):
-        for filiere in sorted(os.listdir(dossier_principal)):
-            if filiere.startswith('.'): continue
-            chemin_filiere = os.path.join(dossier_principal, filiere)
-            if not os.path.isdir(chemin_filiere): continue
-
-            for annee in sorted(os.listdir(chemin_filiere)):
-                if annee.startswith('.'): continue
-                chemin_annee = os.path.join(chemin_filiere, annee)
-                if not os.path.isdir(chemin_annee): continue
-
-                for matiere in sorted(os.listdir(chemin_annee)):
-                    if matiere.startswith('.'): continue
-                    chemin_matiere = os.path.join(chemin_annee, matiere)
-                    if not os.path.isdir(chemin_matiere): continue
-
-                    fichiers_cours  = ""
-                    fichiers_td     = ""
-                    fichiers_tp     = ""
-                    fichiers_sujets = ""
-
-                    for racine, dirs, fichiers in os.walk(chemin_matiere):
-                        for fichier in sorted(fichiers):
-                            if not fichier.lower().endswith(extensions_valides): continue
-                            total_fichiers += 1
-
-                            chemin_fichier_complet = os.path.join(racine, fichier)
-                            chemin_web = chemin_fichier_complet.replace("\\", "/")
-                            parent_lower = racine.lower()
-                            nom_affichable = fichier.replace("_", " ")
-
-                            taille_bytes = os.path.getsize(chemin_fichier_complet)
-                            taille_str = (f"{taille_bytes / 1024:.1f} Ko"
-                                          if taille_bytes < 1024 * 1024
-                                          else f"{taille_bytes / (1024 * 1024):.1f} Mo")
-                            span_taille = f"<span class='file-size'>{taille_str}</span>"
-                            lien = f'<a href="{chemin_web}" target="_blank" class="file-link">'
-
-                            if est_dossier_sujet(racine):
-                                fichiers_sujets += f'{lien}<span class="tag tag-sujet">SUJET</span> 📄 {nom_affichable} {span_taille}</a>\n'
-                            elif "td" in parent_lower or "td" in fichier.lower():
-                                fichiers_td += f'{lien}<span class="tag tag-td">TD</span> 📝 {nom_affichable} {span_taille}</a>\n'
-                            elif "tp" in parent_lower or "tp" in fichier.lower():
-                                fichiers_tp += f'{lien}<span class="tag tag-tp">TP</span> ⚙️ {nom_affichable} {span_taille}</a>\n'
-                            else:
-                                fichiers_cours += f'{lien}<span class="tag tag-cours">COURS</span> 📖 {nom_affichable} {span_taille}</a>\n'
-
-                    titre = get_nom_matiere(matiere)
-
-                    if annee not in data: data[annee] = {}
-                    if filiere not in data[annee]: data[annee][filiere] = {}
-                    data[annee][filiere][matiere] = {
-                        "titre":  titre,
-                        "cours":  fichiers_cours,
-                        "td":     fichiers_td,
-                        "tp":     fichiers_tp,
-                        "sujets": fichiers_sujets,
-                    }
-
-    cartes_html = ""
-    for annee, filieres in data.items():
-        for filiere, matieres in filieres.items():
-            for matiere, info in matieres.items():
-                cartes_html += f'<div class="card" data-filiere="{filiere}" data-annee="{annee}">'
-                cartes_html += f'<div class="card-badge">{filiere} - {annee}</div>'
-                cartes_html += f'<h2>{info["titre"]}</h2><div class="file-list">'
-
-                if not info["cours"] and not info["td"] and not info["tp"] and not info["sujets"]:
-                    cartes_html += '<p style="font-size:0.8rem;font-style:italic;opacity:0.7;">Aucun fichier.</p>'
-                else:
-                    if info["cours"]:
-                        cartes_html += f'<details class="sub-section"><summary class="sub-title">📖 Cours</summary><div class="folder-content">{info["cours"]}</div></details>'
-                    if info["td"]:
-                        cartes_html += f'<details class="sub-section"><summary class="sub-title">📝 Travaux Dirigés</summary><div class="folder-content">{info["td"]}</div></details>'
-                    if info["tp"]:
-                        cartes_html += f'<details class="sub-section"><summary class="sub-title">⚙️ Travaux Pratiques</summary><div class="folder-content">{info["tp"]}</div></details>'
-                    if info["sujets"]:
-                        cartes_html += f'<details class="sub-section"><summary class="sub-title">📄 Sujets d\'entraînement</summary><div class="folder-content">{info["sujets"]}</div></details>'
-
-                cartes_html += '</div></div>'
-
-    annee_labels = {
-        "L1": ("📘", "Licence 1"),
-        "L2": ("📗", "Licence 2"),
-        "L3": ("📕", "Licence 3"),
-    }
-    ecran_annees_html = '<div class="nav-grid">'
-    for annee in ["L1", "L2", "L3"]:
-        emoji, label = annee_labels.get(annee, ("📚", annee))
-        nb = sum(len(mats) for mats in data.get(annee, {}).values())
-        sous_titre = "Aucun document" if nb == 0 else f"{nb} matière{'s' if nb > 1 else ''}"
-        ecran_annees_html += f'''
-        <div class="nav-card" onclick="goFiliere('{annee}')">
-            <div class="nav-card-icon">{emoji}</div>
-            <div class="nav-card-title">{label}</div>
-            <div class="nav-card-sub">{sous_titre}</div>
-        </div>'''
-    ecran_annees_html += '</div>'
-
-    filiere_labels = {
-        "GI":  ["💻", "Génie Informatique",        "GI"],
-        "MRT": ["📡", "Maintenance Réseau Telecom", "MRT"],
-        "GE":  ["📊", "Gestion des Entreprises",   "GE"],
-    }
-
-    data_json           = json.dumps(data, ensure_ascii=False)
-    filiere_labels_json = json.dumps(filiere_labels, ensure_ascii=False)
-
-    display_login = "flex" if MOT_DE_PASSE_ACTIF else "none"
-    display_main  = "none" if MOT_DE_PASSE_ACTIF else "block"
-    
-    # HTML du message d'été
-    message_ete_html  = '<div class="special-message">☀️ Plus que deux mois avant l\'été ! 🌴</div>' if AFFICHER_MESSAGE_ETE else ''
-
-    html_complet = f"""<!DOCTYPE html>
+PAGE = r"""<!DOCTYPE html>
 <html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Drive Universitaire</title>
-    <style>
-        :root {{
-            --primary: #d4af37; --bg: #f8fafc; --card: #ffffff;
-            --text: #1e293b; --border: #e2e8f0;
-            --link-bg: #f8fafc; --link-hover: #fffbeb;
-            --subtitle-bg: #ffffff; --subtitle-hover: #f1f5f9;
-        }}
-        @media (prefers-color-scheme: dark) {{
-            :root {{ --bg: #0f172a; --card: #1e293b; --text: #f1f5f9; --border: #334155; --link-bg: #0f172a; --link-hover: #334155; --subtitle-bg: #1e293b; --subtitle-hover: #334155; }}
-            .special-message {{ background: #0c4a6e !important; color: #38bdf8 !important; border-color: #0284c7 !important; }}
-            .subtitle, footer {{ color: #94a3b8 !important; }}
-            .file-link {{ color: #cbd5e1 !important; }}
-            .nav-card {{ background: #1e293b !important; }}
-            .nav-card:hover {{ background: #263044 !important; }}
-            .breadcrumb {{ background: #1e293b !important; border-color: #334155 !important; }}
-        }}
-        * {{ box-sizing: border-box; }}
-        body {{ font-family: 'Inter', system-ui, sans-serif; background: var(--bg); color: var(--text); padding: 0; line-height: 1.5; margin: 0; transition: background 0.3s, color 0.3s; scroll-behavior: smooth; }}
-        {decor_css}
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Drive Universitaire</title>
+<meta name="description" content="Cours, travaux dirigés, travaux pratiques et sujets — GI · MRT · GE">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Source+Sans+3:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#f6f1e7; --paper:#fffdf8; --hover:#fbf6ea; --ink:#1c2738; --ink-soft:#5f6879; --line:#e4dbc9;
+  --navy:#1f2f4a; --navy-ink:#f3ecdc; --navy-soft:#c9c0ad; --accent:#7b1e2b; --gold:#a8834a; --gold-light:#d8b878; --gold-soft:#f1e7d3;
+  --new:#2f6b4f; --c-cours:#a8834a; --c-td:#2f6b4f; --c-tp:#2c4f7c; --c-sujet:#7b1e2b;
+  --shadow:0 1px 2px rgba(28,39,56,.05), 0 6px 20px rgba(28,39,56,.05);
+  --serif:'Cormorant Garamond', Georgia, 'Times New Roman', serif;
+  --sans:'Source Sans 3', system-ui, -apple-system, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg:#11151d; --paper:#181e29; --hover:#1d2431; --ink:#ebe4d4; --ink-soft:#9aa2b1; --line:#2a3242;
+    --navy:#0b1018; --navy-ink:#efe7d6; --navy-soft:#a9a291; --accent:#df9aa1; --gold:#c9a46a; --gold-light:#d8b878; --gold-soft:#262117;
+    --new:#7fc4a0; --c-cours:#c9a46a; --c-td:#7fc4a0; --c-tp:#93b3e0; --c-sujet:#df9aa1;
+    --shadow:0 1px 2px rgba(0,0,0,.3);
+  }
+}
+* { box-sizing:border-box; }
+html { -webkit-text-size-adjust:100%; }
+body { margin:0; background:var(--bg); color:var(--ink); font-family:var(--sans); font-size:16px; line-height:1.55; }
+body.no-scroll { overflow:hidden; }
+button { font:inherit; color:inherit; }
+svg { display:block; }
 
-        /* ── LOGIN ── */
-        #login-screen {{ position: fixed; top: 0; left: 0; width: 100%; height: 100vh; background: var(--bg); display: {display_login}; align-items: center; justify-content: center; z-index: 9999; }}
-        .login-box {{ background: var(--card); padding: 40px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); border: 1px solid var(--border); text-align: center; max-width: 350px; width: 90%; }}
-        .login-box h2 {{ color: var(--primary); margin-top: 0; font-size: 1.8rem; margin-bottom: 5px; }}
-        .login-box p {{ color: #64748b; font-size: 0.9rem; margin-bottom: 25px; }}
-        .login-box input {{ width: 100%; padding: 12px; margin-bottom: 15px; border: 2px solid var(--border); border-radius: 8px; background: var(--bg); color: var(--text); outline: none; transition: 0.2s; }}
-        .login-box input:focus {{ border-color: var(--primary); }}
-        .login-box button {{ width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 1rem; font-weight: bold; cursor: pointer; transition: 0.2s; }}
-        .login-box button:hover {{ transform: translateY(-2px); box-shadow: 0 5px 15px rgba(212,175,55,0.4); }}
-        #login-error {{ color: #ef4444; font-size: 0.85rem; margin-top: 15px; display: none; font-weight: bold; }}
-        .login-warning {{ font-size: 0.75rem; color: #94a3b8; margin-top: 20px; }}
+/* ── En-tête ── */
+.masthead { background:var(--navy); color:var(--navy-ink); border-bottom:4px double var(--gold); }
+.masthead-inner { max-width:1100px; margin:0 auto; padding:30px 16px 26px; }
+.eyebrow { font-size:.72rem; letter-spacing:.24em; text-transform:uppercase; color:var(--gold-light); }
+.title { font-family:var(--serif); font-weight:600; font-size:clamp(2.3rem,7vw,3.5rem); line-height:1.02; margin:8px 0 6px; cursor:pointer; display:inline-block; }
+.subtitle { font-family:var(--serif); font-style:italic; font-size:1.18rem; color:var(--navy-soft); margin:0; }
+.search { position:relative; max-width:580px; margin-top:22px; }
+.search input { width:100%; padding:13px 44px 13px 46px; border-radius:4px; border:1px solid rgba(255,255,255,.18);
+  background:rgba(255,255,255,.07); color:var(--navy-ink); font-size:1rem; font-family:var(--sans); outline:none; transition:border-color .2s, background .2s; -webkit-appearance:none; }
+.search input::placeholder { color:var(--navy-soft); }
+.search input:focus { border-color:var(--gold-light); background:rgba(255,255,255,.11); }
+.search .s-icon { position:absolute; left:16px; top:50%; transform:translateY(-50%); color:var(--gold-light); pointer-events:none; }
+.search .s-clear { position:absolute; right:8px; top:50%; transform:translateY(-50%); background:none; border:0; color:var(--navy-soft); cursor:pointer; padding:8px; display:none; }
+.search.has-text .s-clear { display:block; }
+.banner { background:var(--gold-soft); color:var(--ink); text-align:center; padding:10px 16px; font-family:var(--serif); font-style:italic; font-size:1.1rem; border-bottom:1px solid var(--line); }
 
-        /* ── LAYOUT ── */
-        #main-content {{ display: {display_main}; padding: 20px; min-height: 100vh; }}
-        header {{ text-align: center; padding: 30px; background: var(--card); border-radius: 16px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); border-bottom: 4px solid var(--primary); max-width: 1160px; margin: 0 auto 30px auto; transition: background 0.3s; }}
-        h1 {{ margin: 0; color: var(--primary); font-size: 2rem; }}
-        .subtitle {{ font-size: 1.1rem; color: #64748b; margin-top: 5px; font-weight: 500; }}
-        .special-message {{ margin-top: 15px; font-size: 0.9rem; background: #e0f2fe; color: #0369a1; padding: 8px 20px; border-radius: 20px; display: inline-block; border: 1px solid #7dd3fc; font-weight: bold; }}
+/* ── Contenu ── */
+main { max-width:1100px; margin:0 auto; padding:26px 16px 40px; min-height:50vh; }
+.crumbs { display:flex; flex-wrap:wrap; align-items:center; gap:8px; font-size:.78rem; letter-spacing:.12em; text-transform:uppercase; color:var(--ink-soft); margin-bottom:22px; }
+.crumbs a { color:var(--accent); text-decoration:none; font-weight:600; }
+.crumbs a:hover { text-decoration:underline; text-underline-offset:3px; }
+.crumbs .sep { color:var(--gold); }
+.back { margin-left:auto; background:none; border:1px solid var(--line); border-radius:4px; padding:5px 12px; cursor:pointer; font-size:.78rem; letter-spacing:.1em; text-transform:uppercase; color:var(--ink-soft); }
+.back:hover { border-color:var(--gold); color:var(--accent); }
 
-        /* ── BREADCRUMB ── */
-        .breadcrumb {{ display: none; align-items: center; gap: 8px; max-width: 1200px; margin: 0 auto 20px auto; background: var(--card); padding: 12px 20px; border-radius: 12px; border: 1px solid var(--border); flex-wrap: wrap; }}
-        .breadcrumb.visible {{ display: flex; }}
-        .bc-item {{ color: #94a3b8; font-size: 0.9rem; }}
-        .bc-item.link {{ color: var(--primary); cursor: pointer; font-weight: 600; text-decoration: underline; text-underline-offset: 3px; }}
-        .bc-item.link:hover {{ opacity: 0.75; }}
-        .bc-sep {{ color: #cbd5e1; font-size: 0.8rem; }}
-        .btn-retour {{ margin-left: auto; padding: 6px 16px; background: var(--primary); color: white; border: none; border-radius: 8px; font-size: 0.85rem; font-weight: bold; cursor: pointer; transition: 0.2s; }}
-        .btn-retour:hover {{ transform: translateY(-1px); box-shadow: 0 3px 10px rgba(212,175,55,0.4); }}
+.section + .section { margin-top:40px; }
+.section-head { display:flex; align-items:center; gap:16px; margin:0 0 18px; }
+.section-head h2 { font-family:var(--serif); font-weight:600; font-size:1.75rem; margin:0; line-height:1.2; }
+.section-head::after { content:""; flex:1; height:1px; background:var(--line); }
 
-        /* ── ÉCRANS ── */
-        .screen {{ display: none; max-width: 1200px; margin: 0 auto; animation: fadeIn 0.25s ease; }}
-        .screen.active {{ display: block; }}
-        @keyframes fadeIn {{ from {{ opacity: 0; transform: translateY(10px); }} to {{ opacity: 1; transform: translateY(0); }} }}
-        .screen-title {{ font-size: 1.3rem; font-weight: 800; margin-bottom: 20px; color: var(--text); }}
-        .screen-title span {{ color: var(--primary); }}
+.grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(260px, 1fr)); gap:16px; }
+.card { position:relative; display:flex; gap:16px; align-items:flex-start; background:var(--paper); border:1px solid var(--line); border-radius:6px;
+  padding:20px 44px 20px 20px; cursor:pointer; box-shadow:var(--shadow); transition:border-color .2s, transform .2s; }
+.card:hover { border-color:var(--gold); transform:translateY(-2px); }
+.card:focus-visible, .doc-main:focus-visible, .icon-btn:focus-visible { outline:2px solid var(--accent); outline-offset:2px; }
+.card-body { flex:1; min-width:0; }
+.card-kicker { display:block; font-size:.68rem; letter-spacing:.18em; text-transform:uppercase; color:var(--accent); margin-bottom:2px; }
+.card-title { display:block; font-family:var(--serif); font-size:1.38rem; font-weight:600; line-height:1.18; overflow-wrap:anywhere; }
+.card-meta { display:block; font-size:.88rem; color:var(--ink-soft); margin-top:5px; }
+.card .badge-new { margin-top:10px; }
+.card-annee { flex-direction:column; gap:6px; padding:26px 24px; min-height:190px; }
+.roman { font-family:var(--serif); font-size:3.6rem; line-height:.9; font-weight:600; color:var(--gold); }
+.card.vide { box-shadow:none; }
+.card.vide .roman { color:var(--line); }
+.seal { flex:none; width:54px; height:54px; border-radius:50%; display:grid; place-items:center; font-family:var(--serif); font-weight:600; font-size:1.3rem;
+  color:var(--accent); background:var(--paper); border:1px solid var(--gold); box-shadow:inset 0 0 0 3px var(--paper), inset 0 0 0 4px var(--gold-soft); }
+.star { position:absolute; top:8px; right:8px; background:none; border:0; cursor:pointer; color:var(--line); padding:6px; border-radius:50%; }
+.star:hover { color:var(--gold); }
+.star.on { color:var(--gold); }
+.badge-new { display:inline-block; font-size:.64rem; font-weight:600; letter-spacing:.14em; text-transform:uppercase; color:var(--new); border:1px solid currentColor; border-radius:3px; padding:1px 6px; white-space:nowrap; }
 
-        /* ── GRILLES NAV ── */
-        .nav-grid {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; }}
-        .nav-card {{ background: var(--card); border: 2px solid var(--border); border-radius: 16px; padding: 30px 20px; text-align: center; cursor: pointer; transition: all 0.25s; }}
-        .nav-card:hover {{ border-color: var(--primary); transform: translateY(-4px); box-shadow: 0 10px 25px rgba(212,175,55,0.2); }}
-        .nav-card-icon {{ font-size: 3rem; margin-bottom: 12px; }}
-        .nav-card-title {{ font-size: 1.1rem; font-weight: 800; color: var(--text); margin-bottom: 5px; }}
-        .nav-card-sub {{ font-size: 0.85rem; color: #94a3b8; }}
+/* ── Page matière ── */
+.page-head { position:relative; display:flex; gap:22px; align-items:center; background:var(--paper); border:1px solid var(--line); border-top:3px double var(--gold); border-radius:6px; padding:26px; margin-bottom:30px; }
+.page-head .seal { width:72px; height:72px; font-size:1.7rem; }
+.page-head h2 { font-family:var(--serif); font-weight:600; font-size:clamp(1.8rem,5vw,2.5rem); line-height:1.08; margin:2px 0 6px; overflow-wrap:anywhere; }
+.pin-btn { display:inline-flex; align-items:center; gap:7px; margin-top:12px; background:none; border:1px solid var(--line); border-radius:4px; padding:6px 12px; cursor:pointer; font-size:.85rem; color:var(--ink-soft); }
+.pin-btn:hover { border-color:var(--gold); color:var(--accent); }
+.pin-btn.on { color:var(--gold); border-color:var(--gold); }
+.chips { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:26px; }
+.chip { text-decoration:none; font-size:.85rem; border:1px solid var(--line); background:var(--paper); border-radius:999px; padding:5px 14px; color:var(--ink); }
+.chip:hover { border-color:var(--gold); }
+.chip b { color:var(--ink-soft); font-weight:500; margin-left:4px; }
+.doc-section { margin-bottom:30px; scroll-margin-top:16px; }
+.doc-section h3 { display:flex; align-items:center; gap:10px; font-family:var(--serif); font-weight:600; font-size:1.4rem; margin:0 0 10px; }
+.doc-section h3 .dot { width:9px; height:9px; transform:rotate(45deg); flex:none; }
+.doc-section h3 small { font-family:var(--sans); font-size:.8rem; color:var(--ink-soft); font-weight:400; }
 
-        /* ── FILTRE ── */
-        .filters {{ display: flex; gap: 15px; justify-content: center; margin-bottom: 25px; flex-wrap: wrap; }}
-        .search-container {{ width: 100%; max-width: 340px; }}
-        input[type="text"] {{ width: 100%; padding: 10px 15px; border-radius: 25px; border: 2px solid var(--border); background: var(--bg); color: var(--text); font-size: 0.95rem; outline: none; transition: 0.3s; }}
-        input[type="text"]:focus {{ border-color: var(--primary); box-shadow: 0 0 10px rgba(212,175,55,0.3); }}
+.docs { background:var(--paper); border:1px solid var(--line); border-radius:6px; overflow:hidden; }
+.doc { display:flex; align-items:center; gap:14px; padding:12px 14px; border-top:1px solid var(--line); }
+.doc:first-child { border-top:0; }
+.doc:hover { background:var(--hover); }
+.ext { flex:none; width:46px; text-align:center; font-size:.64rem; font-weight:600; letter-spacing:.08em; padding:4px 0; border-radius:3px; border:1px solid currentColor; color:var(--ink-soft); }
+.ext-pdf { color:var(--c-sujet); } .ext-doc { color:var(--c-tp); } .ext-ppt { color:var(--c-cours); } .ext-xls, .ext-img { color:var(--c-td); }
+.doc-main { flex:1; min-width:0; background:none; border:0; text-align:left; cursor:pointer; padding:2px 0; }
+.doc-name { display:block; font-weight:500; overflow-wrap:anywhere; }
+.doc-main:hover .doc-name { color:var(--accent); text-decoration:underline; text-underline-offset:3px; text-decoration-color:var(--gold); }
+.doc-meta { display:block; font-size:.8rem; color:var(--ink-soft); margin-top:1px; }
+.icon-btn { flex:none; width:38px; height:38px; display:grid; place-items:center; border-radius:50%; border:1px solid var(--line); color:var(--ink-soft); background:var(--paper); cursor:pointer; text-decoration:none; }
+.icon-btn:hover { color:var(--accent); border-color:var(--gold); }
+.empty { text-align:center; padding:56px 16px; color:var(--ink-soft); font-family:var(--serif); font-style:italic; font-size:1.25rem; }
+.result-count { color:var(--ink-soft); font-family:var(--serif); font-style:italic; font-size:1.1rem; margin:-6px 0 18px; }
+@media (max-width:560px) {
+  .doc { gap:10px; padding:12px; }
+  .ext { width:40px; }
+  .page-head { padding:20px; gap:16px; }
+  .page-head .seal { width:56px; height:56px; font-size:1.35rem; }
+}
 
-        /* ── CARTES MATIÈRES ── */
-        .grid {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 20px; }}
-        .card {{ background: var(--card); border-radius: 12px; padding: 20px; border: 1px solid var(--border); transition: all 0.3s; }}
-        .card:hover {{ transform: translateY(-3px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.2); }}
-        .card-badge {{ font-size: 0.7rem; color: #fff; background: var(--primary); padding: 3px 8px; border-radius: 12px; display: inline-block; margin-bottom: 10px; font-weight: bold; }}
-        h2 {{ font-size: 1.1rem; margin: 0 0 15px 0; padding-bottom: 10px; border-bottom: 2px solid var(--border); display: flex; align-items: center; gap: 10px; }}
+/* ── Aperçu ── */
+.modal { position:fixed; inset:0; background:rgba(12,16,24,.62); display:none; align-items:center; justify-content:center; padding:24px; z-index:50; }
+.modal.open { display:flex; }
+.modal-panel { background:var(--paper); width:min(1040px,100%); height:min(90vh,100%); border-radius:8px; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 24px 70px rgba(0,0,0,.4); }
+.modal-head { display:flex; align-items:center; gap:10px; padding:10px 12px 10px 18px; border-bottom:1px solid var(--line); }
+.modal-title { flex:1; min-width:0; }
+.modal-title b { display:block; font-family:var(--serif); font-size:1.2rem; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.modal-title span { display:block; font-size:.78rem; color:var(--ink-soft); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.modal-body { flex:1; min-height:0; background:var(--bg); }
+.modal-body iframe { width:100%; height:100%; border:0; background:#fff; }
+.img-wrap { height:100%; overflow:auto; display:grid; place-items:center; padding:16px; }
+.img-wrap img { max-width:100%; max-height:100%; object-fit:contain; }
+.code { margin:0; height:100%; overflow:auto; padding:18px; font-size:.85rem; line-height:1.5; white-space:pre; color:var(--ink); }
+.no-preview { height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; gap:16px; padding:24px; color:var(--ink-soft); font-family:var(--serif); font-style:italic; font-size:1.2rem; }
+.btn { display:inline-flex; align-items:center; gap:8px; padding:9px 18px; border-radius:4px; border:1px solid var(--accent); background:var(--accent); color:var(--paper); text-decoration:none; font-family:var(--sans); font-style:normal; font-size:.95rem; font-weight:500; cursor:pointer; }
+@media (max-width:640px) { .modal { padding:0; } .modal-panel { height:100%; border-radius:0; } }
 
-        details.sub-section {{ margin-bottom: 12px; background: var(--link-bg); border-radius: 8px; border: 1px solid var(--border); overflow: hidden; }}
-        summary.sub-title {{ font-size: 0.95rem; font-weight: bold; color: var(--text); padding: 12px 15px; cursor: pointer; display: flex; align-items: center; justify-content: space-between; background: var(--subtitle-bg); transition: 0.2s; list-style: none; user-select: none; }}
-        summary.sub-title::-webkit-details-marker {{ display: none; }}
-        summary.sub-title:hover {{ background: var(--subtitle-hover); }}
-        summary.sub-title::after {{ content: '▼'; font-size: 0.8rem; color: #94a3b8; transition: transform 0.3s; }}
-        details[open] summary.sub-title::after {{ transform: rotate(180deg); }}
-        details[open] summary.sub-title {{ border-bottom: 1px solid var(--border); }}
-        .folder-content {{ padding: 12px; display: flex; flex-direction: column; gap: 8px; }}
+/* ── Pied de page ── */
+footer { border-top:1px solid var(--line); padding:30px 16px 44px; text-align:center; color:var(--ink-soft); font-size:.88rem; }
+.fleuron { font-family:var(--serif); color:var(--gold); font-size:1.5rem; line-height:1; }
+.sign { font-family:var(--serif); font-size:1.25rem; color:var(--ink); font-weight:600; }
+.copyright { max-width:520px; margin:14px auto 0; font-size:.78rem; opacity:.85; }
 
-        .file-link {{ display: flex; align-items: center; text-decoration: none; color: #475569; padding: 10px; background: var(--subtitle-bg); border-radius: 8px; font-size: 0.9rem; border: 1px solid var(--border); transition: all 0.2s; }}
-        .file-link:hover {{ background: var(--link-hover); border-color: var(--primary); color: var(--primary) !important; transform: translateX(5px); }}
-        .file-size {{ font-size: 0.75rem; color: #94a3b8; margin-left: auto; font-weight: normal; }}
-
-        /* ── TAGS ── */
-        .tag {{ font-size: 0.65rem; font-weight: 800; padding: 3px 7px; border-radius: 5px; margin-right: 10px; text-transform: uppercase; }}
-        .tag-cours  {{ background: rgba(245,158,11,0.2);  color: #d97706; border: 1px solid rgba(245,158,11,0.3); }}
-        .tag-td     {{ background: rgba(34,197,94,0.2);   color: #16a34a; border: 1px solid rgba(34,197,94,0.3); }}
-        .tag-tp     {{ background: rgba(56,189,248,0.2);  color: #0284c7; border: 1px solid rgba(56,189,248,0.3); }}
-        .tag-sujet  {{ background: rgba(168,85,247,0.2);  color: #9333ea; border: 1px solid rgba(168,85,247,0.3); }}
-
-        /* ── AUCUN RÉSULTAT ── */
-        #no-result {{ display: none; text-align: center; padding: 60px 20px; color: #94a3b8; font-size: 1.1rem; }}
-        #no-result span {{ font-size: 3rem; display: block; margin-bottom: 15px; }}
-
-        /* ── RETOUR EN HAUT ── */
-        #backToTop {{ display: none; position: fixed; bottom: 30px; right: 30px; z-index: 99; font-size: 1.5rem; border: none; outline: none; background-color: var(--primary); color: white; cursor: pointer; border-radius: 50%; width: 50px; height: 50px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); transition: 0.3s; justify-content: center; align-items: center; opacity: 0; pointer-events: none; }}
-        #backToTop.show {{ opacity: 1; pointer-events: auto; display: flex; }}
-        #backToTop:hover {{ transform: translateY(-5px); box-shadow: 0 6px 15px rgba(212,175,55,0.5); }}
-
-        /* ── FOOTER ── */
-        footer {{ text-align: center; margin-top: 60px; padding: 30px; font-size: 0.95rem; color: #64748b; border-top: 1px solid var(--border); line-height: 1.8; }}
-        .boss-name {{ color: var(--primary); font-weight: 900; font-size: 1.1rem; }}
-        .copyright {{ font-size: 0.8rem; color: #94a3b8; margin-top: 10px; padding-top: 15px; border-top: 1px solid var(--border); line-height: 1.7; }}
-        .copyright small {{ font-size: 0.75rem; opacity: 0.8; font-style: italic; }}
-    </style>
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-PWQN6WBSV4"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){{dataLayer.push(arguments);}}
-      gtag('js', new Date());
-      gtag('config', 'G-PWQN6WBSV4');
-    </script>
+/* ── Connexion ── */
+#login { position:fixed; inset:0; background:var(--bg); display:none; align-items:center; justify-content:center; z-index:100; padding:16px; }
+.login-box { background:var(--paper); border:1px solid var(--line); border-top:3px double var(--gold); border-radius:6px; padding:36px 28px; width:100%; max-width:360px; text-align:center; }
+.login-box h2 { font-family:var(--serif); font-weight:600; font-size:2rem; margin:4px 0 4px; }
+.login-box p { color:var(--ink-soft); margin:0 0 22px; font-size:.92rem; }
+.login-box input { width:100%; padding:12px; margin-bottom:12px; border:1px solid var(--line); border-radius:4px; background:var(--bg); color:var(--ink); font-size:1rem; outline:none; }
+.login-box input:focus { border-color:var(--gold); }
+.login-box .btn { width:100%; justify-content:center; }
+#login-error { color:var(--accent); font-size:.88rem; margin:14px 0 0; display:none; }
+</style>
+__ANALYTICS__
 </head>
 <body>
 
-<div id="login-screen">
-    <div class="login-box">
-        <h2>🔒 Accès Privé</h2>
-        <p>Entrez vos identifiants pour accéder au Drive.</p>
-        <input type="text" id="username" placeholder="Identifiant" autocomplete="off">
-        <input type="password" id="password" placeholder="Mot de passe">
-        <button onclick="verifierLogin()">Se connecter</button>
-        <p id="login-error">❌ Identifiant ou mot de passe incorrect.</p>
-        <p class="login-warning">⚠️ Protection basique — ne pas partager pour des documents confidentiels.</p>
-    </div>
+<div id="login">
+  <form class="login-box" id="login-form" autocomplete="off">
+    <div class="fleuron">❦</div>
+    <h2>Accès privé</h2>
+    <p>Entrez vos identifiants pour consulter le Drive.</p>
+    <input type="text" id="username" placeholder="Identifiant">
+    <input type="password" id="password" placeholder="Mot de passe">
+    <button class="btn" type="submit">Se connecter</button>
+    <p id="login-error">Identifiant ou mot de passe incorrect.</p>
+  </form>
 </div>
 
-<div id="main-content">
-    <header>
-        <h1>🎓 Drive Universitaire</h1>
-        <div class="subtitle">GI • MRT • GE | <b>{total_fichiers} documents</b></div>
-        {message_ete_html}
-    </header>
-
-    <div class="breadcrumb" id="breadcrumb">
-        <span class="bc-item link" onclick="goHome()">🏠 Accueil</span>
-        <span class="bc-sep" id="sep1" style="display:none">›</span>
-        <span class="bc-item" id="bc-annee"   style="display:none"></span>
-        <span class="bc-sep" id="sep2" style="display:none">›</span>
-        <span class="bc-item" id="bc-filiere" style="display:none"></span>
-        <button class="btn-retour" onclick="goBack()">← Retour</button>
+<header class="masthead">
+  <div class="masthead-inner">
+    <div class="eyebrow">Bibliothèque numérique · GI · MRT · GE</div>
+    <h1 class="title" id="home-link">Drive Universitaire</h1>
+    <p class="subtitle" id="stats"></p>
+    <div class="search" id="search">
+      <svg class="s-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input type="search" id="q" placeholder="Rechercher un document, une matière…" autocomplete="off" aria-label="Rechercher">
+      <button class="s-clear" id="q-clear" aria-label="Effacer"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
     </div>
+  </div>
+</header>
+<div id="banner-slot"></div>
 
-    <div class="screen active" id="screen-annees">
-        <p class="screen-title">Choisissez une <span>année</span> :</p>
-        {ecran_annees_html}
+<main id="view"></main>
+
+<footer>
+  <div class="fleuron">❦</div>
+  <p>Dernière mise à jour le <b id="maj"></b></p>
+  <p>Conçu par <span class="sign" id="signature"></span></p>
+  <p class="copyright">© <span id="annee-copy"></span> <span id="signature-copy"></span> — Tous droits réservés.<br>Toute reproduction, copie ou redistribution de ce code est interdite sans autorisation écrite.</p>
+</footer>
+
+<div class="modal" id="modal" aria-hidden="true">
+  <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="modal-name">
+    <div class="modal-head">
+      <div class="modal-title"><b id="modal-name"></b><span id="modal-ctx"></span></div>
+      <a class="icon-btn" id="modal-open" target="_blank" rel="noopener" title="Ouvrir dans un nouvel onglet"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg></a>
+      <a class="icon-btn" id="modal-dl" download title="Télécharger"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg></a>
+      <button class="icon-btn" id="modal-close" title="Fermer"><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
     </div>
-
-    <div class="screen" id="screen-filieres">
-        <p class="screen-title">Choisissez une <span>filière</span> :</p>
-        <div class="nav-grid" id="filieres-grid"></div>
-    </div>
-
-    <div class="screen" id="screen-matieres">
-        <div class="filters">
-            <div class="search-container">
-                <input type="text" id="searchBar" placeholder="🔍 Rechercher un document...">
-            </div>
-        </div>
-        <div class="grid" id="cards-container">
-            {cartes_html}
-        </div>
-        <div id="no-result">
-            <span>🔍</span>
-            Aucun document trouvé.<br>
-            <small>Essaie un autre mot-clé.</small>
-        </div>
-    </div>
-
-    <button id="backToTop" title="Retour en haut">↑</button>
-    <footer>
-        By <span class="boss-name">{NOM_SIGNATURE_NORMAL}</span>
-        <div class="copyright">
-            © {maintenant.year} {NOM_SIGNATURE_NORMAL} — Tous droits réservés.<br>
-            <small>Toute reproduction, copie ou redistribution de ce code est strictement interdite sans autorisation écrite.</small>
-        </div>
-    </footer>
+    <div class="modal-body" id="modal-body"></div>
+  </div>
 </div>
 
 <script>
-const DATA           = {data_json};
-const FILIERE_LABELS = {filiere_labels_json};
-const ALL_FILIERES   = ["GI", "MRT", "GE"];
+const DATA = __DATA__;
+const CFG  = __CONFIG__;
 
-let currentAnnee   = null;
-let currentFiliere = null;
-let navHistory     = [];
+const FILIERES = CFG.filieres;
+const ANNEES = [["L1","I","Licence 1"], ["L2","II","Licence 2"], ["L3","III","Licence 3"]];
+const TYPES = [["cours","Cours"], ["td","Travaux dirigés"], ["tp","Travaux pratiques"], ["sujet","Sujets d’entraînement"]];
+const COURT = { cours:"cours", td:"TD", tp:"TP", sujet:"sujets" };
+const OFFICE = ["doc","docx","ppt","pptx","xls","xlsx"];
+const IMAGES = ["png","jpg","jpeg","gif","webp"];
+const TEXTE  = ["txt","c","cpp","h","py","java","html","css","js","sql"];
+const ICON = {
+  star: '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="m12 3 2.7 5.6 6.1.9-4.4 4.3 1 6.1L12 17l-5.4 2.9 1-6.1-4.4-4.3 6.1-.9z"/></svg>',
+  dl:   '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10l5 5 5-5M5 20h14"/></svg>'
+};
 
-// ── LOGIN ──────────────────────────────────────────────────────────────
-function verifierLogin() {{
-    var user = document.getElementById("username").value;
-    var pass = document.getElementById("password").value;
-    if (user === "{LOGIN_REQUIS}" && pass === "{MDP_REQUIS}") {{
-        sessionStorage.setItem("driveAutorise", "oui");
-        afficherSite();
-    }} else {{
-        document.getElementById("login-error").style.display = "block";
-        var box = document.querySelector(".login-box");
-        box.style.transform = "translateX(10px)";
-        setTimeout(() => box.style.transform = "translateX(-10px)", 100);
-        setTimeout(() => box.style.transform = "translateX(0)", 200);
-    }}
-}}
-function afficherSite() {{
-    document.getElementById("login-screen").style.display = "none";
-    document.getElementById("main-content").style.display = "block";
-}}
-if ("{MOT_DE_PASSE_ACTIF}" === "False" || sessionStorage.getItem("driveAutorise") === "oui") {{
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]));
+const norm = s => String(s).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+const plur = (n, mot, pl) => n + " " + (n > 1 ? (pl || mot + "s") : mot);
+const isNew = d => d && (Date.now() - d * 1000) < CFG.nouveauJours * 864e5;
+const url = p => p.split("/").map(encodeURIComponent).join("/");
+const href = (...p) => "#/" + p.map(encodeURIComponent).join("/");
+const taille = b => b < 1048576 ? (b / 1024).toFixed(0) + " Ko" : (b / 1048576).toFixed(1).replace(".", ",") + " Mo";
+const dateFr = d => new Date(d * 1000).toLocaleDateString("fr-FR", { day:"numeric", month:"short", year:"numeric" });
+const nomAnnee = a => (ANNEES.find(x => x[0] === a) || [a, "", a])[2];
+
+// ── Index de tous les documents ──
+const ALL = [];
+for (const [a, fs] of Object.entries(DATA))
+  for (const [f, ms] of Object.entries(fs))
+    for (const [m, info] of Object.entries(ms))
+      info.docs.forEach(d => { Object.assign(d, { a, f, m, titre: info.titre, i: ALL.length }); ALL.push(d); });
+
+const docsDe = (a, f, m) => ALL.filter(d => d.a === a && (!f || d.f === f) && (!m || d.m === m));
+const nbNew = docs => docs.filter(d => isNew(d.d)).length;
+const badgeNew = n => n ? `<span class="badge-new">${n === true ? "Nouveau" : plur(n, "nouveau", "nouveaux")}</span>` : "";
+
+// ── Favoris (mémorisés dans ce navigateur) ──
+const FAV_KEY = "drive-favoris";
+function getFavs() { try { return JSON.parse(localStorage.getItem(FAV_KEY)) || []; } catch (e) { return []; } }
+function setFavs(v) { try { localStorage.setItem(FAV_KEY, JSON.stringify(v)); } catch (e) {} }
+function toggleFav(id) { const f = getFavs(); setFavs(f.includes(id) ? f.filter(x => x !== id) : [...f, id]); render(); }
+
+function initiales(t) {
+  const mots = t.replace(/[’']/g, " ").split(/\s+/).filter(w => w && !/^(de|des|du|la|le|les|l|d|à|a|et|aux|en)$/i.test(w));
+  if (mots.length === 1) return mots[0].slice(0, 2).replace(/^./, c => c.toUpperCase());
+  return mots.slice(0, 2).map(w => w[0].toUpperCase()).join("");
+}
+
+// ── Composants ──
+function crumbs(items) {
+  if (!items.length) return "";
+  const parts = [`<a href="#/">Accueil</a>`].concat(items.map(([label, h]) => h ? `<a href="${h}">${esc(label)}</a>` : `<span>${esc(label)}</span>`));
+  return `<nav class="crumbs">${parts.join('<span class="sep">›</span>')}<button class="back" data-back>← Retour</button></nav>`;
+}
+const section = (titre, contenu) => `<section class="section"><div class="section-head"><h2>${titre}</h2></div>${contenu}</section>`;
+
+function carteMatiere(a, f, m, avecContexte) {
+  const info = DATA[a][f][m], docs = docsDe(a, f, m), id = [a, f, m].join("/");
+  const fav = getFavs().includes(id);
+  const resume = TYPES.map(([t]) => [t, docs.filter(d => d.t === t).length]).filter(x => x[1]).map(([t, n]) => n + " " + (t === "sujet" && n === 1 ? "sujet" : COURT[t])).join(" · ") || "Aucun document";
+  return `<div class="card" role="link" tabindex="0" data-go="${href(a, f, m)}">
+    <span class="seal">${esc(initiales(info.titre))}</span>
+    <span class="card-body">
+      ${avecContexte ? `<span class="card-kicker">${esc(a)} · ${esc(f)}</span>` : ""}
+      <span class="card-title">${esc(info.titre)}</span>
+      <span class="card-meta">${resume}</span>
+      ${badgeNew(nbNew(docs))}
+    </span>
+    <button class="star ${fav ? "on" : ""}" data-fav="${esc(id)}" title="${fav ? "Retirer des favoris" : "Épingler"}" aria-label="Épingler">${ICON.star}</button>
+  </div>`;
+}
+
+function ligneDoc(d, avecContexte) {
+  const e = (d.e || "").toLowerCase();
+  const cls = e === "pdf" ? "pdf" : e.startsWith("doc") ? "doc" : e.startsWith("ppt") ? "ppt" : e.startsWith("xls") ? "xls" : IMAGES.includes(e) || e === "heic" ? "img" : "autre";
+  const ctx = avecContexte ? `${d.a} · ${d.f} · ${d.titre} · ${COURT[d.t]} · ` : "";
+  return `<div class="doc">
+    <span class="ext ext-${cls}">${esc(e.toUpperCase() || "—")}</span>
+    <button class="doc-main" data-preview="${d.i}">
+      <span class="doc-name">${esc(d.n)}</span>
+      <span class="doc-meta">${esc(ctx)}${taille(d.s)} · ajouté le ${dateFr(d.d)}</span>
+    </button>
+    ${isNew(d.d) ? badgeNew(true) : ""}
+    <a class="icon-btn" href="${url(d.p)}" download title="Télécharger" aria-label="Télécharger">${ICON.dl}</a>
+  </div>`;
+}
+
+// ── Écrans ──
+function vueAccueil() {
+  const favs = getFavs().map(id => id.split("/")).filter(([a, f, m]) => DATA[a] && DATA[a][f] && DATA[a][f][m]);
+  let html = favs.length ? section("Mes matières épinglées", `<div class="grid">${favs.map(([a, f, m]) => carteMatiere(a, f, m, true)).join("")}</div>`) : "";
+  html += section("Choisissez une année", `<div class="grid">${ANNEES.map(([a, rom, label]) => {
+    const docs = docsDe(a), nm = Object.values(DATA[a] || {}).reduce((s, ms) => s + Object.keys(ms).length, 0);
+    return `<div class="card card-annee ${docs.length ? "" : "vide"}" role="link" tabindex="0" data-go="${href(a)}">
+      <span class="roman">${rom}</span>
+      <span class="card-title">${label}</span>
+      <span class="card-meta">${docs.length ? plur(nm, "matière") + " · " + plur(docs.length, "document") : "Bientôt disponible"}</span>
+      ${badgeNew(nbNew(docs))}
+    </div>`;
+  }).join("")}</div>`);
+  return html;
+}
+
+function vueFilieres(a) {
+  return crumbs([[nomAnnee(a)]]) + section(`${nomAnnee(a)} · <i>choisissez une filière</i>`, `<div class="grid">${Object.entries(FILIERES).map(([f, nom]) => {
+    const nm = Object.keys((DATA[a] || {})[f] || {}).length, docs = docsDe(a, f);
+    return `<div class="card ${docs.length ? "" : "vide"}" role="link" tabindex="0" data-go="${href(a, f)}">
+      <span class="seal">${esc(f)}</span>
+      <span class="card-body">
+        <span class="card-title">${esc(nom)}</span>
+        <span class="card-meta">${nm ? plur(nm, "matière") + " · " + plur(docs.length, "document") : "Aucun document pour l’instant"}</span>
+        ${badgeNew(nbNew(docs))}
+      </span>
+    </div>`;
+  }).join("")}</div>`);
+}
+
+function vueMatieres(a, f) {
+  const ms = Object.keys((DATA[a] || {})[f] || {}).sort((x, y) => DATA[a][f][x].titre.localeCompare(DATA[a][f][y].titre, "fr"));
+  const contenu = ms.length ? `<div class="grid">${ms.map(m => carteMatiere(a, f, m)).join("")}</div>`
+                            : `<div class="empty">Aucune matière n’a encore été déposée ici.</div>`;
+  return crumbs([[nomAnnee(a), href(a)], [FILIERES[f] || f]]) + section(esc(FILIERES[f] || f), contenu);
+}
+
+function vueMatiere(a, f, m) {
+  const info = DATA[a][f][m], docs = docsDe(a, f, m), id = [a, f, m].join("/"), fav = getFavs().includes(id);
+  const groupes = TYPES.map(([t, label]) => [t, label, docs.filter(d => d.t === t)]).filter(g => g[2].length);
+  let html = crumbs([[nomAnnee(a), href(a)], [f, href(a, f)], [info.titre]]);
+  html += `<div class="page-head">
+    <span class="seal">${esc(initiales(info.titre))}</span>
+    <div>
+      <span class="card-kicker">${esc(nomAnnee(a))} · ${esc(FILIERES[f] || f)}</span>
+      <h2>${esc(info.titre)}</h2>
+      <span class="card-meta">${plur(docs.length, "document")}${nbNew(docs) ? " · " + plur(nbNew(docs), "nouveau", "nouveaux") : ""}</span>
+      <button class="pin-btn ${fav ? "on" : ""}" data-fav="${esc(id)}">${ICON.star} ${fav ? "Épinglée" : "Épingler cette matière"}</button>
+    </div>
+  </div>`;
+  if (!groupes.length) return html + `<div class="empty">Aucun document pour l’instant.</div>`;
+  if (groupes.length > 1) html += `<div class="chips">${groupes.map(([t, label, g]) => `<a class="chip" href="#" data-scroll="sec-${t}">${label}<b>${g.length}</b></a>`).join("")}</div>`;
+  html += groupes.map(([t, label, g]) => `<section class="doc-section" id="sec-${t}">
+    <h3><span class="dot" style="background:var(--c-${t})"></span>${label} <small>${g.length}</small></h3>
+    <div class="docs">${g.map(d => ligneDoc(d)).join("")}</div>
+  </section>`).join("");
+  return html;
+}
+
+function vueRecherche(q) {
+  const mots = norm(q).split(/\s+/).filter(Boolean);
+  const res = ALL.filter(d => { const h = norm([d.n, d.e, d.titre, d.a, d.f, COURT[d.t], FILIERES[d.f]].join(" ")); return mots.every(w => h.includes(w)); });
+  let html = section(`Résultats pour « ${esc(q)} »`, "");
+  html = html.replace("</section>", `<p class="result-count">${res.length ? plur(res.length, "document trouvé", "documents trouvés") : ""}</p>` +
+    (res.length ? `<div class="docs">${res.slice(0, 200).map(d => ligneDoc(d, true)).join("")}</div>` : `<div class="empty">Aucun document trouvé. Essayez un autre mot-clé.</div>`) + "</section>");
+  return html;
+}
+
+// ── Routeur (#/L2/GI/Matière) ──
+const segments = () => location.hash.replace(/^#\/?/, "").split("/").filter(Boolean).map(s => { try { return decodeURIComponent(s); } catch (e) { return s; } });
+function render() {
+  const q = $("#q").value.trim();
+  $("#search").classList.toggle("has-text", !!q);
+  const [a, f, m] = segments();
+  let html;
+  if (q.length >= 2) html = vueRecherche(q);
+  else if (a && f && m && DATA[a] && DATA[a][f] && DATA[a][f][m]) html = vueMatiere(a, f, m);
+  else if (a && f && FILIERES[f]) html = vueMatieres(a, f);
+  else if (a && ANNEES.some(x => x[0] === a)) html = vueFilieres(a);
+  else html = vueAccueil();
+  $("#view").innerHTML = html;
+}
+
+window.addEventListener("hashchange", () => { $("#q").value = ""; render(); window.scrollTo(0, 0); });
+$("#q").addEventListener("input", render);
+$("#q-clear").addEventListener("click", () => { $("#q").value = ""; render(); $("#q").focus(); });
+$("#home-link").addEventListener("click", () => { $("#q").value = ""; location.hash = "#/"; render(); });
+
+document.addEventListener("click", e => {
+  const fav = e.target.closest("[data-fav]");
+  if (fav) { e.preventDefault(); e.stopPropagation(); toggleFav(fav.dataset.fav); return; }
+  const pv = e.target.closest("[data-preview]");
+  if (pv) { ouvrirApercu(+pv.dataset.preview); return; }
+  const sc = e.target.closest("[data-scroll]");
+  if (sc) { e.preventDefault(); const el = document.getElementById(sc.dataset.scroll); if (el) el.scrollIntoView({ behavior: "smooth" }); return; }
+  if (e.target.closest("[data-back]")) { const s = segments(); location.hash = s.length > 1 ? href(...s.slice(0, -1)) : "#/"; return; }
+  const go = e.target.closest("[data-go]");
+  if (go) location.hash = go.dataset.go;
+});
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape") fermerApercu();
+  if (e.key === "Enter" && e.target.matches && e.target.matches("[data-go]")) location.hash = e.target.dataset.go;
+});
+
+// ── Aperçu des documents ──
+function ouvrirApercu(i) {
+  const d = ALL[i]; if (!d) return;
+  const u = url(d.p), e = (d.e || "").toLowerCase(), enLigne = location.protocol.startsWith("http");
+  const indispo = msg => `<div class="no-preview">${msg}<a class="btn" href="${u}" download>${ICON.dl} Télécharger le fichier</a></div>`;
+  let body;
+  if (e === "pdf") body = `<iframe src="${u}" title="${esc(d.n)}"></iframe>`;
+  else if (IMAGES.includes(e)) body = `<div class="img-wrap"><img src="${u}" alt="${esc(d.n)}"></div>`;
+  else if (OFFICE.includes(e)) body = enLigne
+    ? `<iframe src="https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(new URL(u, location.href).href)}" title="${esc(d.n)}"></iframe>`
+    : indispo("L’aperçu des fichiers Word, PowerPoint et Excel fonctionne une fois le site en ligne.");
+  else if (TEXTE.includes(e)) {
+    body = `<pre class="code">Chargement…</pre>`;
+    fetch(u).then(r => r.ok ? r.text() : Promise.reject()).then(t => { const p = $("#modal-body pre"); if (p) p.textContent = t; })
+      .catch(() => { $("#modal-body").innerHTML = indispo("Impossible d’afficher ce fichier."); });
+  } else body = indispo("Aperçu indisponible pour ce format.");
+  $("#modal-name").textContent = d.n + (e ? "." + e : "");
+  $("#modal-ctx").textContent = `${nomAnnee(d.a)} · ${FILIERES[d.f] || d.f} · ${d.titre} · ${taille(d.s)}`;
+  $("#modal-open").href = u; $("#modal-dl").href = u;
+  $("#modal-body").innerHTML = body;
+  $("#modal").classList.add("open"); $("#modal").setAttribute("aria-hidden", "false");
+  document.body.classList.add("no-scroll");
+}
+function fermerApercu() {
+  if (!$("#modal").classList.contains("open")) return;
+  $("#modal").classList.remove("open"); $("#modal").setAttribute("aria-hidden", "true");
+  $("#modal-body").innerHTML = ""; document.body.classList.remove("no-scroll");
+}
+$("#modal-close").addEventListener("click", fermerApercu);
+$("#modal").addEventListener("click", e => { if (e.target.id === "modal") fermerApercu(); });
+
+// ── Textes fixes ──
+const nbMat = Object.values(DATA).reduce((s, fs) => s + Object.values(fs).reduce((t, ms) => t + Object.keys(ms).length, 0), 0);
+$("#stats").textContent = `${plur(ALL.length, "document")} · ${plur(nbMat, "matière")}`;
+$("#maj").textContent = CFG.maj;
+$("#signature").textContent = CFG.signature;
+$("#signature-copy").textContent = CFG.signature;
+$("#annee-copy").textContent = CFG.annee;
+if (CFG.message) $("#banner-slot").innerHTML = `<div class="banner">${esc(CFG.message)}</div>`;
+
+// ── Connexion (protection basique) ──
+function afficherSite() { $("#login").style.display = "none"; }
+let autorise = false; try { autorise = sessionStorage.getItem("driveAutorise") === "oui"; } catch (e) {}
+if (CFG.motDePasse && !autorise) $("#login").style.display = "flex";
+$("#login-form").addEventListener("submit", e => {
+  e.preventDefault();
+  if ($("#username").value === CFG.login && $("#password").value === CFG.mdp) {
+    try { sessionStorage.setItem("driveAutorise", "oui"); } catch (err) {}
     afficherSite();
-}}
-document.getElementById("password").addEventListener("keypress", e => {{
-    if (e.key === "Enter") verifierLogin();
-}});
+  } else $("#login-error").style.display = "block";
+});
 
-// ── NAVIGATION ─────────────────────────────────────────────────────────
-function showScreen(id) {{
-    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-    document.getElementById(id).classList.add('active');
-    window.scrollTo({{ top: 0, behavior: 'smooth' }});
-}}
-
-function updateBreadcrumb() {{
-    const bc = document.getElementById('breadcrumb');
-    if (navHistory.length === 0) {{ bc.classList.remove('visible'); return; }}
-    bc.classList.add('visible');
-
-    const bcAnnee   = document.getElementById('bc-annee');
-    const bcFiliere = document.getElementById('bc-filiere');
-
-    if (currentAnnee) {{
-        document.getElementById('sep1').style.display = '';
-        bcAnnee.style.display = '';
-        bcAnnee.textContent = currentAnnee;
-        if (navHistory[navHistory.length - 1] !== 'filieres') {{
-            bcAnnee.classList.add('link');
-            bcAnnee.onclick = () => goFiliere(currentAnnee);
-        }} else {{
-            bcAnnee.classList.remove('link');
-            bcAnnee.onclick = null;
-        }}
-    }} else {{
-        document.getElementById('sep1').style.display = 'none';
-        bcAnnee.style.display = 'none';
-    }}
-
-    if (currentFiliere) {{
-        const lbl = FILIERE_LABELS[currentFiliere];
-        document.getElementById('sep2').style.display = '';
-        bcFiliere.style.display = '';
-        bcFiliere.textContent = lbl ? lbl[2] + ' · ' + lbl[1] : currentFiliere;
-        bcFiliere.classList.remove('link');
-    }} else {{
-        document.getElementById('sep2').style.display = 'none';
-        bcFiliere.style.display = 'none';
-    }}
-}}
-
-function goFiliere(annee) {{
-    currentAnnee   = annee;
-    currentFiliere = null;
-    navHistory     = ['filieres'];
-
-    const grid     = document.getElementById('filieres-grid');
-    grid.innerHTML = '';
-    const filieres = DATA[annee] || {{}};
-
-    ALL_FILIERES.forEach(fil => {{
-        const matieres  = filieres[fil] || {{}};
-        const nb        = Object.keys(matieres).length;
-        const lbl       = FILIERE_LABELS[fil];
-        const emoji     = lbl ? lbl[0] : '📁';
-        const nom       = lbl ? lbl[1] : fil;
-        const code      = lbl ? lbl[2] : fil;
-        const sousTitre = nb === 0 ? 'Aucun document' : nb + ' matière' + (nb > 1 ? 's' : '');
-        grid.innerHTML += `
-            <div class="nav-card" onclick="goMatieres('${{annee}}', '${{fil}}')">
-                <div class="nav-card-icon">${{emoji}}</div>
-                <div class="nav-card-title">${{nom}}</div>
-                <div class="nav-card-sub">${{code}} • ${{sousTitre}}</div>
-            </div>`;
-    }});
-
-    showScreen('screen-filieres');
-    updateBreadcrumb();
-}}
-
-function goMatieres(annee, filiere) {{
-    currentAnnee   = annee;
-    currentFiliere = filiere;
-    navHistory     = ['filieres', 'matieres'];
-
-    let count = 0;
-    document.querySelectorAll('.card').forEach(card => {{
-        const show = card.dataset.filiere === filiere && card.dataset.annee === annee;
-        card.style.display = show ? 'block' : 'none';
-        if (show) count++;
-    }});
-
-    document.getElementById('searchBar').value = '';
-    document.querySelectorAll('details').forEach(d => d.open = false);
-    document.querySelectorAll('.file-link').forEach(l => l.style.display = 'flex');
-    document.getElementById('no-result').style.display = count === 0 ? 'block' : 'none';
-
-    showScreen('screen-matieres');
-    updateBreadcrumb();
-}}
-
-function goBack() {{
-    if (navHistory.length === 0) return;
-    navHistory.pop();
-    const current = navHistory[navHistory.length - 1];
-    if (current === 'filieres') {{
-        currentFiliere = null;
-        showScreen('screen-filieres');
-        updateBreadcrumb();
-    }} else {{
-        goHome();
-    }}
-}}
-
-function goHome() {{
-    currentAnnee = currentFiliere = null;
-    navHistory   = [];
-    showScreen('screen-annees');
-    updateBreadcrumb();
-}}
-
-// ── RECHERCHE ──────────────────────────────────────────────────────────
-document.getElementById('searchBar').addEventListener('keyup', function() {{
-    const term = this.value.toLowerCase().trim();
-    let count  = 0;
-
-    document.querySelectorAll('.card').forEach(card => {{
-        if (card.dataset.filiere !== currentFiliere || card.dataset.annee !== currentAnnee) return;
-
-        const links = card.querySelectorAll('.file-link');
-        let hasVisible = false;
-
-        links.forEach(link => {{
-            const show = link.textContent.toLowerCase().includes(term);
-            link.style.display = show ? 'flex' : 'none';
-            if (show) hasVisible = true;
-        }});
-
-        card.querySelectorAll('details').forEach(d => {{
-            if (term !== '') {{
-                d.open = true;
-            }} else {{
-                d.open = false;
-                d.querySelectorAll('.file-link').forEach(l => l.style.display = 'flex');
-                hasVisible = true;
-            }}
-        }});
-
-        const show = hasVisible || (term === '' && links.length === 0);
-        card.style.display = show ? 'block' : 'none';
-        if (show) count++;
-    }});
-
-    document.getElementById('no-result').style.display = count === 0 ? 'block' : 'none';
-}});
-
-// ── RETOUR EN HAUT ─────────────────────────────────────────────────────
-const btn = document.getElementById("backToTop");
-window.onscroll = () => btn.classList.toggle("show", document.documentElement.scrollTop > 300);
-btn.onclick     = () => window.scrollTo({{ top: 0, behavior: 'smooth' }});
+render();
 </script>
 </body>
 </html>"""
 
+ANALYTICS = f"""<script async src="https://www.googletagmanager.com/gtag/js?id={GOOGLE_ANALYTICS_ID}"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){{dataLayer.push(arguments);}}
+  gtag('js', new Date());
+  gtag('config', '{GOOGLE_ANALYTICS_ID}');
+</script>""" if GOOGLE_ANALYTICS_ID else ""
+
+
+def pour_script(obj):
+    """JSON sûr à insérer dans une balise <script>."""
+    return json.dumps(obj, ensure_ascii=False).replace("</", "<\\/")
+
+
 # ==========================================
-# 💾 6. ÉCRITURE ET ENVOI GITHUB
+# 🔍 6. SCAN DU DOSSIER cours/
+# ==========================================
+total_fichiers = 0
+if MODE_MAINTENANCE:
+    html_complet = PAGE_MAINTENANCE.replace("__SIGNATURE__", NOM_SIGNATURE_MAINTENANCE)
+else:
+    dates = dates_ajout_git()
+    data = {}
+
+    if os.path.isdir(DOSSIER_COURS):
+        for filiere in sorted(os.listdir(DOSSIER_COURS)):
+            chemin_filiere = os.path.join(DOSSIER_COURS, filiere)
+            if filiere.startswith(".") or not os.path.isdir(chemin_filiere):
+                continue
+            for annee in sorted(os.listdir(chemin_filiere)):
+                chemin_annee = os.path.join(chemin_filiere, annee)
+                if annee.startswith(".") or not os.path.isdir(chemin_annee):
+                    continue
+                for matiere in sorted(os.listdir(chemin_annee)):
+                    chemin_matiere = os.path.join(chemin_annee, matiere)
+                    if matiere.startswith(".") or not os.path.isdir(chemin_matiere):
+                        continue
+
+                    docs = []
+                    for racine, dossiers, fichiers in os.walk(chemin_matiere):
+                        dossiers[:] = sorted(d for d in dossiers if not d.startswith("."))
+                        rel = os.path.relpath(racine, chemin_matiere)
+                        sous_dossiers = [] if rel == "." else rel.split(os.sep)
+                        for fichier in sorted(fichiers):
+                            if fichier.startswith((".", "~$")) or not fichier.lower().endswith(EXTENSIONS_VALIDES):
+                                continue
+                            chemin = os.path.join(racine, fichier).replace("\\", "/")
+                            base, ext = os.path.splitext(fichier)
+                            docs.append({
+                                "n": base.replace("_", " ").strip(),
+                                "e": ext[1:].lower(),
+                                "p": chemin,
+                                "t": categorie(sous_dossiers, fichier),
+                                "s": os.path.getsize(chemin),
+                                "d": dates.get(unicodedata.normalize("NFC", chemin)) or int(os.path.getmtime(chemin)),
+                            })
+                    total_fichiers += len(docs)
+                    data.setdefault(annee, {}).setdefault(filiere, {})[matiere] = {
+                        "titre": nom_matiere(matiere),
+                        "docs": docs,
+                    }
+
+    config = {
+        "filieres": FILIERES,
+        "nouveauJours": NOUVEAU_JOURS,
+        "message": MESSAGE_SPECIAL,
+        "signature": NOM_SIGNATURE_NORMAL,
+        "maj": date_maj,
+        "annee": maintenant.year,
+        "motDePasse": MOT_DE_PASSE_ACTIF,
+        "login": LOGIN_REQUIS if MOT_DE_PASSE_ACTIF else "",
+        "mdp": MDP_REQUIS if MOT_DE_PASSE_ACTIF else "",
+    }
+    html_complet = (PAGE
+                    .replace("__ANALYTICS__", ANALYTICS)
+                    .replace("__DATA__", pour_script(data))
+                    .replace("__CONFIG__", pour_script(config)))
+
+# ==========================================
+# 💾 7. ÉCRITURE ET ENVOI SUR GITHUB
 # ==========================================
 with open("index.html", "w", encoding="utf-8") as f:
     f.write(html_complet)
+print(f"✅ index.html généré ({total_fichiers} fichiers indexés).")
 
-print("✅ index.html généré avec succès !")
+if LOCAL:
+    print("🧪 Mode --local : rien n'a été envoyé sur GitHub.")
+    sys.exit(0)
 
 try:
     subprocess.run(["git", "add", "."], check=True)
-
     if MODE_MAINTENANCE:
-        message_commit = "🚧 Mise en maintenance du site (Avec Auto-Sync 🔄)"
+        message_commit = "🚧 Mise en maintenance du site"
     elif MOT_DE_PASSE_ACTIF:
-        message_commit = f"🔒 Mise à jour du drive (accès protégé) - {date_maj} (Avec Auto-Sync 🔄)"
+        message_commit = f"🔒 Mise à jour du drive (accès protégé) - {date_maj}"
     else:
-        message_commit = f"📚 Mise à jour du drive - {date_maj} (Avec Auto-Sync 🔄)"
-
-    subprocess.run(["git", "commit", "-m", message_commit], check=True)
-    subprocess.run(["git", "push", "origin", "main"], check=True)
-
-    if MODE_MAINTENANCE:
-        print("🚧 LE SITE EST FERMÉ ! (Mode maintenance actif)")
+        message_commit = f"📚 Mise à jour du drive - {date_maj}"
+    commit = git("commit", "-m", message_commit)
+    if commit.returncode != 0 and "nothing to commit" in (commit.stdout + commit.stderr):
+        print("ℹ️  Rien de nouveau à envoyer.")
     else:
-        print(f"🌍 SITE EN LIGNE ! | Mot de passe : {'✅ Activé' if MOT_DE_PASSE_ACTIF else '🔓 Désactivé'} | {total_fichiers} fichiers indexés")
-
+        subprocess.run(["git", "push", "origin", "main"], check=True)
+        if MODE_MAINTENANCE:
+            print("🚧 LE SITE EST FERMÉ (mode maintenance).")
+        else:
+            print(f"🌍 SITE EN LIGNE ! | Mot de passe : {'✅ activé' if MOT_DE_PASSE_ACTIF else '🔓 désactivé'} | {total_fichiers} fichiers")
 except Exception as e:
     print(f"⚠️  Git : {e}")
-    print("   → Fais un Cmd+S ou modifie une lettre si 'nothing to commit'")
