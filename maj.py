@@ -3,9 +3,11 @@
 """
 Drive Universitaire — générateur du site (v2 · design académique)
 
-Utilisation :
-    python3 maj.py           → synchronise avec GitHub, génère index.html, commit + push
-    python3 maj.py --local   → génère seulement index.html (aucune commande git), pour tester
+Ce script est lancé automatiquement par GitHub (.github/workflows/site.yml)
+à chaque fois qu'un fichier est ajouté ou modifié dans le dépôt.
+Il génère index.html ; GitHub publie ensuite le site.
+
+Pour tester sur ton ordinateur :  python3 maj.py   puis ouvrir index.html
 
 Organisation des dossiers (inchangée) :
     cours/<FILIERE>/<ANNEE>/<Matière>/<Cours|TD|TP|Sujets...>/<fichiers>
@@ -15,12 +17,9 @@ import os
 import re
 import sys
 import json
-import time
 import datetime
 import subprocess
 import unicodedata
-
-LOCAL = "--local" in sys.argv
 
 # ==========================================
 # ⚙️ 1. PARAMÈTRES ET INTERRUPTEURS
@@ -153,23 +152,6 @@ def dates_ajout_git():
             dates.setdefault(unicodedata.normalize("NFC", ligne), ts)
     return dates
 
-
-# ==========================================
-# 🔄 3. SYNCHRONISATION (récupère les fichiers ajoutés depuis l'iPad)
-# ==========================================
-if not LOCAL:
-    print("🔄 Synchronisation avec GitHub...")
-    try:
-        subprocess.run(["git", "checkout", "main"], check=True, capture_output=True)
-        stash = git("stash")
-        a_stashe = "No local changes" not in stash.stdout and stash.returncode == 0
-        subprocess.run(["git", "pull", "--rebase", "origin", "main"],
-                       check=True, capture_output=True, text=True)
-        if a_stashe:
-            git("stash", "pop")
-        print("✅ Synchronisé avec GitHub.")
-    except subprocess.CalledProcessError as e:
-        print(f"⚠️ Synchronisation impossible : {(e.stderr or '').strip() or 'conflit mineur'}. On continue.")
 
 maintenant = datetime.datetime.now()
 date_maj = maintenant.strftime("%d/%m/%Y à %H:%M")
@@ -747,32 +729,8 @@ else:
                     .replace("__CONFIG__", pour_script(config)))
 
 # ==========================================
-# 💾 7. ÉCRITURE ET ENVOI SUR GITHUB
+# 💾 7. ÉCRITURE DU SITE
 # ==========================================
 with open("index.html", "w", encoding="utf-8") as f:
     f.write(html_complet)
 print(f"✅ index.html généré ({total_fichiers} fichiers indexés).")
-
-if LOCAL:
-    print("🧪 Mode --local : rien n'a été envoyé sur GitHub.")
-    sys.exit(0)
-
-try:
-    subprocess.run(["git", "add", "."], check=True)
-    if MODE_MAINTENANCE:
-        message_commit = "🚧 Mise en maintenance du site"
-    elif MOT_DE_PASSE_ACTIF:
-        message_commit = f"🔒 Mise à jour du drive (accès protégé) - {date_maj}"
-    else:
-        message_commit = f"📚 Mise à jour du drive - {date_maj}"
-    commit = git("commit", "-m", message_commit)
-    if commit.returncode != 0 and "nothing to commit" in (commit.stdout + commit.stderr):
-        print("ℹ️  Rien de nouveau à envoyer.")
-    else:
-        subprocess.run(["git", "push", "origin", "main"], check=True)
-        if MODE_MAINTENANCE:
-            print("🚧 LE SITE EST FERMÉ (mode maintenance).")
-        else:
-            print(f"🌍 SITE EN LIGNE ! | Mot de passe : {'✅ activé' if MOT_DE_PASSE_ACTIF else '🔓 désactivé'} | {total_fichiers} fichiers")
-except Exception as e:
-    print(f"⚠️  Git : {e}")
