@@ -1,37 +1,49 @@
-name: Mise à jour automatique 🤖
+# Reconstruit et publie le Drive Universitaire à chaque modification du dépôt.
+# À placer dans : .github/workflows/site.yml
+name: Publier le site
 
 on:
   push:
-    branches:
-      - main
-    paths:
-      - 'cours/**'
-      - 'maj.py'
-  workflow_dispatch:
+    branches: [main]
+  workflow_dispatch:   # bouton « Run workflow » pour relancer à la main
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
 
 jobs:
-  update-site:
-    if: github.actor != 'Robot Drive L1'
+  publier:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-
+    environment:
+      name: github-pages
+      url: ${{ steps.deploiement.outputs.page_url }}
     steps:
-      - name: 📥 Récupération des fichiers
+      - name: Récupérer le dépôt (avec l'historique, pour le badge « Nouveau »)
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: 🐍 Préparation de l'ordinateur virtuel (Python)
+      - name: Installer Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.10'
+          python-version: "3.12"
 
-      - name: ⚙️ Exécution de ton script maj.py
-        env:
-          DRIVE_LOGIN: ${{ secrets.DRIVE_LOGIN }}
-          DRIVE_MDP: ${{ secrets.DRIVE_MDP }}
-        run: |
-          git config --global user.name "Robot Drive L1"
-          git config --global user.email "robot@github.com"
-          python maj.py
+      - name: Générer index.html
+        run: python maj.py
+
+      - name: Préparer la publication
+        uses: actions/configure-pages@v5
+
+      - name: Envoyer les fichiers du site
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+
+      - name: Publier sur GitHub Pages
+        id: deploiement
+        uses: actions/deploy-pages@v4
