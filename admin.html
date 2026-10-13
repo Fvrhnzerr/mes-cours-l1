@@ -7,103 +7,137 @@
 <title>Administration · Drive Universitaire</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Source+Sans+3:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root {
-  --bg:#f6f1e7; --paper:#fffdf8; --hover:#fbf6ea; --ink:#1c2738; --ink-soft:#5f6879; --line:#e4dbc9;
-  --navy:#1f2f4a; --navy-ink:#f3ecdc; --navy-soft:#c9c0ad; --accent:#7b1e2b; --gold:#a8834a; --gold-light:#d8b878; --gold-soft:#f1e7d3;
-  --ok:#2f6b4f; --warn:#9a6a12;
-  --serif:'Cormorant Garamond', Georgia, 'Times New Roman', serif;
-  --sans:'Source Sans 3', system-ui, -apple-system, sans-serif;
+  --bg:#f7f8fa; --paper:#ffffff; --hover:#f8fafc; --ink:#0f172a; --ink-soft:#64748b; --line:#e5e7eb; --line-strong:#d1d5db;
+  --accent:#2563eb; --accent-ink:#ffffff; --accent-soft:#eff6ff; --accent-line:#bfdbfe;
+  --ok:#15803d; --ok-soft:#f0fdf4; --err:#dc2626; --err-soft:#fef2f2; --warn:#b45309;
+  --font:'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
 }
 @media (prefers-color-scheme: dark) {
   :root {
-    --bg:#11151d; --paper:#181e29; --hover:#1d2431; --ink:#ebe4d4; --ink-soft:#9aa2b1; --line:#2a3242;
-    --navy:#0b1018; --navy-ink:#efe7d6; --navy-soft:#a9a291; --accent:#df9aa1; --gold:#c9a46a; --gold-soft:#262117;
-    --ok:#7fc4a0; --warn:#e0b45c;
+    --bg:#0b0d12; --paper:#14171e; --hover:#191d26; --ink:#f1f5f9; --ink-soft:#94a3b8; --line:#232834; --line-strong:#323949;
+    --accent:#60a5fa; --accent-ink:#0b0d12; --accent-soft:#16213a; --accent-line:#1e3a8a;
+    --ok:#4ade80; --ok-soft:#12291c; --err:#f87171; --err-soft:#2c1416; --warn:#fbbf24;
   }
 }
 * { box-sizing:border-box; }
 html { -webkit-text-size-adjust:100%; }
-body { margin:0; background:var(--bg); color:var(--ink); font-family:var(--sans); font-size:16px; line-height:1.55; }
+body { margin:0; background:var(--bg); color:var(--ink); font-family:var(--font); font-size:15px; line-height:1.55; -webkit-font-smoothing:antialiased; }
 button, input, select { font:inherit; color:inherit; }
 a { color:var(--accent); }
 
-.masthead { background:var(--navy); color:var(--navy-ink); border-bottom:4px double var(--gold); }
-.masthead-inner { max-width:760px; margin:0 auto; padding:24px 16px 20px; }
-.eyebrow { font-size:.72rem; letter-spacing:.24em; text-transform:uppercase; color:var(--gold-light); }
-.title { font-family:var(--serif); font-weight:600; font-size:clamp(2rem,7vw,2.8rem); line-height:1.05; margin:6px 0 0; }
-.who { margin-top:10px; font-size:.88rem; color:var(--navy-soft); display:none; align-items:center; gap:10px; flex-wrap:wrap; }
+.masthead { background:var(--paper); border-bottom:1px solid var(--line); }
+.masthead-inner { max-width:760px; margin:0 auto; padding:22px 16px 18px; }
+.eyebrow { display:inline-flex; align-items:center; gap:6px; font-size:.75rem; font-weight:600; color:var(--accent); background:var(--accent-soft); border-radius:999px; padding:4px 10px; }
+.title { font-weight:700; font-size:clamp(1.7rem,6vw,2.2rem); letter-spacing:-.03em; line-height:1.15; margin:10px 0 0; }
+.who { margin-top:10px; font-size:.85rem; color:var(--ink-soft); display:none; align-items:center; gap:10px; flex-wrap:wrap; }
 .who.on { display:flex; }
-.who button { background:none; border:1px solid rgba(255,255,255,.25); border-radius:4px; padding:3px 10px; color:var(--navy-ink); cursor:pointer; font-size:.8rem; }
+.who span::before { content:""; display:inline-block; width:8px; height:8px; border-radius:50%; background:var(--ok); margin-right:6px; vertical-align:1px; }
+.who button { background:var(--paper); border:1px solid var(--line); border-radius:8px; padding:4px 10px; cursor:pointer; font-size:.8rem; font-weight:500; }
+.who button:hover { border-color:var(--err); color:var(--err); }
 
 main { max-width:760px; margin:0 auto; padding:24px 16px 48px; }
-.card { background:var(--paper); border:1px solid var(--line); border-radius:6px; padding:22px; margin-bottom:22px; }
-.card h2 { font-family:var(--serif); font-weight:600; font-size:1.6rem; margin:0 0 4px; line-height:1.2; }
-.card > p.lead { color:var(--ink-soft); margin:0 0 18px; }
+.card { background:var(--paper); border:1px solid var(--line); border-radius:16px; padding:22px; margin-bottom:18px; }
+.card h2 { font-weight:700; font-size:1.25rem; letter-spacing:-.02em; margin:0 0 4px; line-height:1.3; }
+.card > p.lead { color:var(--ink-soft); margin:0 0 18px; font-size:.92rem; }
 .hidden { display:none !important; }
 
-label.f { display:block; font-size:.72rem; letter-spacing:.16em; text-transform:uppercase; color:var(--accent); font-weight:600; margin:18px 0 8px; }
+label.f { display:block; font-size:.82rem; font-weight:600; color:var(--ink); margin:20px 0 8px; }
 label.f:first-of-type { margin-top:4px; }
-.input, select.input { width:100%; padding:11px 12px; border:1px solid var(--line); border-radius:4px; background:var(--bg); outline:none; font-size:1rem; -webkit-appearance:none; appearance:none; }
-.input:focus { border-color:var(--gold); }
+.input, select.input { width:100%; padding:11px 12px; border:1px solid var(--line); border-radius:10px; background:var(--bg); outline:none; font-size:1rem; -webkit-appearance:none; appearance:none; transition:border-color .15s, box-shadow .15s; }
+.input:focus { border-color:var(--accent); box-shadow:0 0 0 4px var(--accent-soft); background:var(--paper); }
 select.input { background-image:linear-gradient(45deg, transparent 50%, var(--ink-soft) 50%), linear-gradient(135deg, var(--ink-soft) 50%, transparent 50%);
   background-position:calc(100% - 18px) 50%, calc(100% - 13px) 50%; background-size:5px 5px; background-repeat:no-repeat; padding-right:34px; }
-.check { display:flex; align-items:center; gap:8px; margin-top:12px; font-size:.92rem; color:var(--ink-soft); }
+.check { display:flex; align-items:center; gap:8px; margin-top:12px; font-size:.9rem; color:var(--ink-soft); }
+.check input { accent-color:var(--accent); width:16px; height:16px; }
 
 .pills { display:flex; flex-wrap:wrap; gap:8px; }
 .pills input { position:absolute; opacity:0; pointer-events:none; }
-.pills label { border:1px solid var(--line); background:var(--bg); border-radius:999px; padding:7px 16px; cursor:pointer; font-size:.95rem; user-select:none; }
-.pills input:checked + label { background:var(--navy); color:var(--navy-ink); border-color:var(--navy); }
-@media (prefers-color-scheme: dark) { .pills input:checked + label { background:var(--gold); color:#11151d; border-color:var(--gold); } }
+.pills label { border:1px solid var(--line); background:var(--paper); border-radius:10px; padding:8px 16px; cursor:pointer; font-size:.92rem; font-weight:500; user-select:none; transition:all .15s; }
+.pills label:hover { border-color:var(--accent-line); }
+.pills input:checked + label { background:var(--accent); color:var(--accent-ink); border-color:var(--accent); }
 .pills input:focus-visible + label { outline:2px solid var(--accent); outline-offset:2px; }
 
-.drop { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; text-align:center; border:1.5px dashed var(--gold); border-radius:6px; padding:26px 16px; background:var(--bg); cursor:pointer; }
-.drop.over { background:var(--gold-soft); }
-.drop b { font-family:var(--serif); font-size:1.25rem; font-weight:600; }
+.drop { display:flex; flex-direction:column; align-items:center; justify-content:center; gap:4px; text-align:center; border:2px dashed var(--line-strong); border-radius:14px; padding:28px 16px; background:var(--bg); cursor:pointer; transition:all .15s; }
+.drop:hover, .drop.over { border-color:var(--accent); background:var(--accent-soft); }
+.drop::before { content:""; width:44px; height:44px; border-radius:12px; background:var(--accent-soft) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='22' viewBox='0 0 24 24' fill='none' stroke='%232563eb' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 16V4M7 9l5-5 5 5M5 20h14'/%3E%3C/svg%3E") center/22px no-repeat; margin-bottom:6px; }
+.drop b { font-size:1rem; font-weight:600; }
 .drop span { font-size:.85rem; color:var(--ink-soft); }
 .drop input { display:none; }
 
-.files { margin-top:12px; border:1px solid var(--line); border-radius:6px; overflow:hidden; }
+.files { margin-top:12px; border:1px solid var(--line); border-radius:12px; overflow:hidden; }
 .files:empty { display:none; }
 .file { display:flex; align-items:center; gap:10px; padding:10px 12px; border-top:1px solid var(--line); background:var(--paper); }
 .file:first-child { border-top:0; }
 .file .name { flex:1; min-width:0; }
-.file .name input { width:100%; border:1px solid transparent; background:transparent; padding:4px 6px; border-radius:3px; font-weight:500; }
-.file .name input:focus { border-color:var(--gold); background:var(--bg); outline:none; }
+.file .name input { width:100%; border:1px solid transparent; background:transparent; padding:4px 6px; border-radius:6px; font-weight:500; }
+.file .name input:hover { border-color:var(--line); }
+.file .name input:focus { border-color:var(--accent); background:var(--bg); outline:none; }
 .file small { display:block; padding-left:6px; font-size:.78rem; color:var(--ink-soft); }
 .file small.warn { color:var(--warn); }
-.file .ext { flex:none; font-size:.66rem; font-weight:600; letter-spacing:.08em; border:1px solid currentColor; border-radius:3px; padding:3px 6px; color:var(--ink-soft); }
-.file .state { flex:none; font-size:.8rem; color:var(--ink-soft); min-width:20px; text-align:right; }
+.file .ext { flex:none; width:40px; height:40px; display:grid; place-items:center; font-size:.64rem; font-weight:700; border-radius:10px; color:var(--accent); background:var(--accent-soft); }
+.file .state { flex:none; font-size:.85rem; color:var(--ink-soft); min-width:20px; text-align:right; font-weight:600; }
 .file .state.ok { color:var(--ok); }
-.file .state.err { color:var(--accent); }
-.x { flex:none; width:32px; height:32px; border-radius:50%; border:1px solid var(--line); background:var(--paper); cursor:pointer; color:var(--ink-soft); display:grid; place-items:center; padding:0; }
-.x:hover { color:var(--accent); border-color:var(--gold); }
+.file .state.err { color:var(--err); }
+.x { flex:none; width:32px; height:32px; border-radius:8px; border:1px solid var(--line); background:var(--paper); cursor:pointer; color:var(--ink-soft); display:grid; place-items:center; padding:0; font-size:.85rem; }
+.x:hover { color:var(--err); border-color:var(--err); background:var(--err-soft); }
 
 .dest { margin-top:16px; font-size:.85rem; color:var(--ink-soft); overflow-wrap:anywhere; }
-.dest code { font-size:.82rem; background:var(--bg); border:1px solid var(--line); border-radius:3px; padding:2px 6px; color:var(--ink); }
+.dest code { font-size:.8rem; background:var(--bg); border:1px solid var(--line); border-radius:6px; padding:2px 6px; color:var(--ink); font-family:ui-monospace, 'SF Mono', Menlo, monospace; }
 
-.btn { display:inline-flex; align-items:center; justify-content:center; gap:8px; padding:12px 20px; border-radius:4px; border:1px solid var(--accent); background:var(--accent); color:var(--paper); font-weight:600; cursor:pointer; text-decoration:none; }
-.btn:disabled { opacity:.45; cursor:not-allowed; }
-.btn.ghost { background:transparent; color:var(--accent); }
+.btn { display:inline-flex; align-items:center; justify-content:center; gap:8px; padding:12px 20px; border-radius:10px; border:1px solid var(--accent); background:var(--accent); color:var(--accent-ink); font-weight:600; cursor:pointer; text-decoration:none; transition:filter .15s; }
+.btn:hover:not(:disabled) { filter:brightness(1.08); }
+.btn:disabled { background:var(--line); border-color:var(--line); color:var(--ink-soft); cursor:not-allowed; }
+.btn.ghost { background:var(--paper); color:var(--accent); border-color:var(--accent-line); }
 .btn.wide { width:100%; margin-top:18px; }
 
-.msg { margin-top:16px; padding:12px 14px; border-radius:4px; border:1px solid var(--line); background:var(--bg); font-size:.95rem; }
+.msg { margin-top:16px; padding:12px 14px; border-radius:12px; border:1px solid var(--line); background:var(--bg); font-size:.92rem; }
 .msg:empty { display:none; }
-.msg.ok { border-color:var(--ok); }
-.msg.err { border-color:var(--accent); color:var(--accent); }
-.msg .links { display:flex; gap:10px; flex-wrap:wrap; margin-top:10px; }
+.msg.ok { border-color:transparent; background:var(--ok-soft); color:var(--ok); }
+.msg.ok b { color:var(--ok); }
+.msg.err { border-color:transparent; background:var(--err-soft); color:var(--err); }
+.msg .links { display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
+.msg .links .btn { padding:8px 14px; font-size:.88rem; }
 
-.doclist { border:1px solid var(--line); border-radius:6px; overflow:hidden; }
+.doclist { border:1px solid var(--line); border-radius:12px; overflow:hidden; }
 .docrow { display:flex; align-items:center; gap:10px; padding:10px 12px; border-top:1px solid var(--line); }
 .docrow:first-child { border-top:0; }
-.docrow .p { flex:1; min-width:0; overflow-wrap:anywhere; }
-.docrow .p small { display:block; color:var(--ink-soft); font-size:.78rem; }
-.empty { color:var(--ink-soft); font-family:var(--serif); font-style:italic; font-size:1.15rem; padding:8px 0; }
+.docrow:hover { background:var(--hover); }
+.docrow .p { flex:1; min-width:0; overflow-wrap:anywhere; font-weight:500; }
+.docrow .p small { display:block; color:var(--ink-soft); font-size:.78rem; font-weight:400; }
+.empty { color:var(--ink-soft); font-size:.92rem; padding:20px; text-align:center; border:1px dashed var(--line-strong); border-radius:12px; }
 
+h3.sub { font-size:1rem; font-weight:600; margin:24px 0 0; padding-top:20px; border-top:1px solid var(--line); }
+.userrow { display:flex; flex-wrap:wrap; align-items:center; gap:10px 12px; padding:12px; border-top:1px solid var(--line); }
+.userrow:first-child { border-top:0; }
+.avatar { flex:none; width:38px; height:38px; border-radius:50%; display:grid; place-items:center; font-weight:700; font-size:.85rem; color:var(--accent); background:var(--accent-soft); }
+.userrow .p { flex:1 1 170px; min-width:0; }
+.userrow .acts { display:flex; gap:6px; margin-left:auto; }
+.userrow .p b { display:block; font-weight:600; overflow-wrap:anywhere; }
+.userrow .p small { display:block; color:var(--ink-soft); font-size:.8rem; }
+.role { display:inline-block; font-size:.7rem; font-weight:600; border-radius:999px; padding:1px 8px; margin-left:6px; vertical-align:2px; background:var(--hover); color:var(--ink-soft); border:1px solid var(--line); }
+.role.admin { background:var(--accent-soft); color:var(--accent); border-color:var(--accent-line); }
+.mini { flex:none; border:1px solid var(--line); background:var(--paper); border-radius:8px; padding:6px 10px; font-size:.8rem; font-weight:500; cursor:pointer; }
+.mini:hover { border-color:var(--accent); color:var(--accent); }
+.mini.danger:hover { border-color:var(--err); color:var(--err); background:var(--err-soft); }
+.cred { margin-top:10px; background:var(--paper); border:1px solid var(--line); border-radius:10px; padding:12px 14px; color:var(--ink); font-size:.9rem; line-height:1.7; white-space:pre-wrap; overflow-wrap:anywhere; }
+.cred code { font-family:ui-monospace, 'SF Mono', Menlo, monospace; font-size:.95rem; font-weight:600; background:var(--accent-soft); color:var(--accent); border-radius:6px; padding:1px 6px; }
+textarea.input { resize:vertical; font-size:.92rem; line-height:1.6; min-height:180px; }
+.hint { font-size:.85rem; color:var(--ink-soft); margin:6px 0 0; }
+.hint code { font-family:ui-monospace, 'SF Mono', Menlo, monospace; background:var(--bg); border:1px solid var(--line); border-radius:6px; padding:1px 5px; color:var(--ink); }
+.apercu { margin-top:12px; }
+.tag { flex:none; font-size:.72rem; font-weight:600; border-radius:999px; padding:2px 9px; background:var(--ok-soft); color:var(--ok); }
+.tag.exist { background:var(--hover); color:var(--ink-soft); border:1px solid var(--line); }
+.recap .userrow { align-items:flex-start; }
+.recap code { font-family:ui-monospace, 'SF Mono', Menlo, monospace; font-weight:600; background:var(--accent-soft); color:var(--accent); border-radius:6px; padding:1px 6px; }
+.mes-mat { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin:-6px 0 6px; font-size:.85rem; color:var(--ink-soft); }
+.mes-mat button { border:1px solid var(--accent-line); background:var(--accent-soft); color:var(--accent); border-radius:999px; padding:5px 12px; font-size:.85rem; font-weight:500; cursor:pointer; }
+.note-box { margin-top:16px; font-size:.82rem; color:var(--ink-soft); background:var(--bg); border-radius:10px; padding:10px 12px; }
 details.help { margin-top:20px; border-top:1px solid var(--line); padding-top:14px; }
-details.help summary { cursor:pointer; font-weight:600; color:var(--accent); }
-details.help ol { padding-left:20px; margin:10px 0 0; }
+details.help summary { cursor:pointer; font-weight:600; color:var(--accent); font-size:.92rem; }
+details.help ol { padding-left:20px; margin:10px 0 0; font-size:.9rem; }
 details.help li { margin-bottom:6px; }
 .note { font-size:.85rem; color:var(--ink-soft); margin-top:14px; }
 </style>
@@ -112,7 +146,7 @@ details.help li { margin-bottom:6px; }
 
 <header class="masthead">
   <div class="masthead-inner">
-    <div class="eyebrow">Drive Universitaire · Espace administrateur</div>
+    <div class="eyebrow">⚙️ Espace administrateur</div>
     <h1 class="title">Ajouter des cours</h1>
     <div class="who" id="who"><span id="who-txt"></span><button id="logout">Se déconnecter</button></div>
   </div>
@@ -122,22 +156,28 @@ details.help li { margin-bottom:6px; }
   <!-- ── Connexion ── -->
   <section class="card" id="ecran-login">
     <h2>Connexion</h2>
-    <p class="lead">Colle ton jeton d'accès GitHub. Il reste sur cet appareil et n'est jamais écrit dans le site.</p>
+    <p class="lead">Connecte-toi avec l'identifiant et le mot de passe que tu as reçus.</p>
     <form id="login-form">
-      <label class="f" for="token">Jeton GitHub</label>
-      <input class="input" type="password" id="token" placeholder="github_pat_…" autocomplete="off" autocapitalize="off" spellcheck="false">
+      <label class="f" for="user">Identifiant</label>
+      <input class="input" id="user" autocomplete="username" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="ex : hassan">
+      <label class="f" for="pass">Mot de passe</label>
+      <input class="input" type="password" id="pass" autocomplete="current-password">
       <label class="check"><input type="checkbox" id="remember" checked> Rester connecté sur cet appareil</label>
       <button class="btn wide" type="submit" id="login-btn">Se connecter</button>
     </form>
     <div class="msg" id="login-msg"></div>
     <details class="help">
-      <summary>Comment créer mon jeton ?</summary>
-      <ol>
+      <summary>Connexion du propriétaire (jeton GitHub)</summary>
+      <form id="token-form">
+        <label class="f" for="token">Jeton GitHub</label>
+        <input class="input" type="password" id="token" placeholder="github_pat_…" autocomplete="off" autocapitalize="off" spellcheck="false">
+        <button class="btn wide ghost" type="submit" id="token-btn">Se connecter avec le jeton</button>
+      </form>
+      <ol style="margin-top:16px">
         <li>Sur GitHub : ta photo de profil → <b>Settings</b> → <b>Developer settings</b> → <b>Personal access tokens</b> → <b>Fine-grained tokens</b> → <b>Generate new token</b>.</li>
-        <li>Nom : « Drive admin ». Expiration : 1 an (ou ce que tu préfères).</li>
         <li><b>Repository access</b> : « Only select repositories » → <b>mes-cours-l1</b>.</li>
-        <li><b>Permissions → Repository permissions</b> : <b>Contents</b> = « Read and write ». Facultatif : <b>Actions</b> = « Read-only » pour voir l'avancement de la publication ici.</li>
-        <li>Clique sur <b>Generate token</b>, copie-le et colle-le ci-dessus. Ne le partage avec personne.</li>
+        <li><b>Permissions</b> : <b>Contents</b> = « Read and write », et <b>Actions</b> = « Read-only ».</li>
+        <li>Clique sur <b>Generate token</b>, copie-le et colle-le ci-dessus.</li>
       </ol>
     </details>
   </section>
@@ -146,6 +186,7 @@ details.help li { margin-bottom:6px; }
   <section class="card hidden" id="ecran-ajout">
     <h2>Nouveaux documents</h2>
     <p class="lead">Choisis où ranger les fichiers, puis dépose-les.</p>
+    <div class="mes-mat hidden" id="mes-mat"></div>
 
     <label class="f">Année</label>
     <div class="pills" id="p-annee"></div>
@@ -163,7 +204,7 @@ details.help li { margin-bottom:6px; }
     <label class="f">Fichiers</label>
     <label class="drop" id="drop">
       <b>Choisir des fichiers</b>
-      <span>PDF, Word, PowerPoint, photos… · plusieurs à la fois</span>
+      <span>ou glisse-les ici · PDF, Word, PowerPoint, photos…</span>
       <input type="file" id="fichiers" multiple>
     </label>
     <div class="files" id="liste"></div>
@@ -179,6 +220,54 @@ details.help li { margin-bottom:6px; }
     <p class="lead">Ce qui est déjà en ligne pour la matière choisie ci-dessus.</p>
     <div id="docs"></div>
     <div class="msg" id="msg-gestion"></div>
+  </section>
+
+  <!-- ── Utilisateurs (administrateurs) ── -->
+  <section class="card hidden" id="ecran-users">
+    <h2>Utilisateurs</h2>
+    <p class="lead">Crée un compte pour chaque professeur, puis envoie-lui son identifiant et son mot de passe.</p>
+    <div class="doclist" id="users"></div>
+    <div class="msg" id="msg-users"></div>
+
+    <h3 class="sub">Créer plusieurs comptes d'un coup</h3>
+    <p class="hint">Une ligne par prof : <code>Nom ; Matière</code>. Le même nom sur deux lignes donne un seul compte avec deux matières. Supprime une ligne pour ne pas créer ce compte.</p>
+    <label class="f">Année</label>
+    <div class="pills" id="p-imp-annee"></div>
+    <label class="f">Filière</label>
+    <div class="pills" id="p-imp-filiere"></div>
+    <label class="f" for="imp-txt">Professeurs</label>
+    <textarea class="input" id="imp-txt" rows="9" spellcheck="false"></textarea>
+    <div class="apercu" id="imp-apercu"></div>
+    <button class="btn wide" id="imp-btn">Créer les comptes</button>
+    <div class="msg" id="msg-imp"></div>
+
+    <h3 class="sub">Nouveau compte</h3>
+    <form id="user-form">
+      <label class="f" for="nu-nom">Nom affiché</label>
+      <input class="input" id="nu-nom" placeholder="ex : M. Hassan" autocomplete="off">
+      <label class="f" for="nu-id">Identifiant</label>
+      <input class="input" id="nu-id" placeholder="ex : hassan" autocomplete="off" autocapitalize="off" spellcheck="false">
+      <label class="f">Rôle</label>
+      <div class="pills" id="p-role"></div>
+      <button class="btn wide" type="submit" id="nu-btn">Créer le compte</button>
+    </form>
+    <div class="note-box">Un <b>professeur</b> peut ajouter et supprimer des cours. Un <b>administrateur</b> peut en plus gérer les comptes.
+      Pour bloquer complètement quelqu'un : supprime son compte, crée un nouveau jeton sur GitHub et supprime l'ancien, connecte-toi avec le nouveau jeton, puis clique sur « Nouveau mot de passe » pour chaque compte restant.</div>
+  </section>
+
+  <!-- ── Mon mot de passe ── -->
+  <section class="card hidden" id="ecran-mdp">
+    <h2>Mon mot de passe</h2>
+    <p class="lead">Choisis un mot de passe personnel (8 caractères minimum).</p>
+    <form id="mdp-form">
+      <input type="text" autocomplete="username" id="mdp-user" hidden>
+      <label class="f" for="mdp1">Nouveau mot de passe</label>
+      <input class="input" type="password" id="mdp1" autocomplete="new-password">
+      <label class="f" for="mdp2">Confirmer</label>
+      <input class="input" type="password" id="mdp2" autocomplete="new-password">
+      <button class="btn wide" type="submit" id="mdp-btn">Changer mon mot de passe</button>
+    </form>
+    <div class="msg" id="msg-mdp"></div>
   </section>
 </main>
 
@@ -197,7 +286,19 @@ const ANNEES = ["L1", "L2", "L3"];
 const FILIERES = { GI: "Génie Informatique", MRT: "Maintenance Réseau Télécom", GE: "Gestion des Entreprises" };
 const TYPES = [["Cours", "Cours"], ["TD", "TD"], ["TP", "TP"], ["Sujets", "Sujets / examens"]];
 const TAILLE_MAX = 95 * 1024 * 1024;   // limite GitHub : 100 Mo par fichier
-const TOKEN_KEY = "drive-admin-token";
+const TOKEN_KEY = "drive-admin-token";        // ancienne version (jeton seul)
+const SESSION_KEY = "drive-admin-session";
+const USERS_FILE = "admin-users.json";
+const ITERATIONS = 600000;
+// Emploi du temps L2 MRT — S3 2026-2027 (modifiable dans la page avant création)
+const IMPORT_DEFAUT = `Mr. Mohamed Houssein ; Technologie réseaux mobile
+Mme Soumeya Bode ; Anglais Technique
+Mr. Elmi Ahmed ; CCNA Module 2
+Mr. Ibrahim Med ; Téléphonie sur IP et service
+Mr. Issa Darsa ; TEC III
+Mr. Mohamed Ahmed ; Initiation au Python
+Mr. Mohamed Ibrahim ; Introduction à Linux
+Mr. Mahad Osman ; Administration des services réseaux (Windows)`;
 
 const $ = s => document.querySelector(s);
 const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]));
@@ -206,6 +307,8 @@ const taille = b => b < 1048576 ? Math.max(1, Math.round(b / 1024)) + " Ko" : (b
 const propre = s => String(s).normalize("NFC").replace(/[\/\\]/g, "-").replace(/\s+/g, " ").trim();
 
 let TOKEN = "";
+let USERS_CACHE = [];
+let SESSION = null;    // {token, id, nom, role} — id vide = propriétaire (jeton)
 let ARBRE = [];        // [{path, sha, size}] des fichiers sous cours/
 let SELECTION = [];    // [{file, nom}]
 
@@ -228,7 +331,7 @@ async function gh(chemin, opts = {}) {
 }
 
 function messageErreur(e) {
-  if (e.status === 401) return "Jeton invalide ou expiré. Reconnecte-toi avec un nouveau jeton.";
+  if (e.status === 401) return SESSION && SESSION.id ? "Ton accès n'est plus valide. Contacte l'administrateur du site." : "Jeton invalide ou expiré. Reconnecte-toi avec un nouveau jeton.";
   if (e.status === 403) return "Ce jeton n'a pas la permission d'écrire dans le dépôt (Contents : Read and write).";
   if (e.status === 404) return "Dépôt introuvable avec ce jeton. Vérifie qu'il donne accès à " + CONF.repo + ".";
   if (e.status === 409 || e.status === 422) return "Le dépôt a changé pendant l'envoi. Réessaie.";
@@ -244,7 +347,9 @@ async function commit(entrees, message) {
     base_tree: base.tree.sha,
     tree: entrees.map(e => ({ path: e.path, mode: "100644", type: "blob", sha: e.sha }))
   }) });
-  const c = await gh("/git/commits", { method: "POST", body: JSON.stringify({ message, tree: arbre.sha, parents: [ref.object.sha] }) });
+  const corps = { message: message + (SESSION && SESSION.nom ? ` — par ${SESSION.nom}` : ""), tree: arbre.sha, parents: [ref.object.sha] };
+  if (SESSION && SESSION.id) corps.author = { name: SESSION.nom || SESSION.id, email: `${SESSION.id}@drive-universitaire.local`, date: new Date().toISOString() };
+  const c = await gh("/git/commits", { method: "POST", body: JSON.stringify(corps) });
   await gh(`/git/refs/heads/${CONF.branch}`, { method: "PATCH", body: JSON.stringify({ sha: c.sha }) });
 }
 
@@ -263,38 +368,342 @@ function lireBase64(file) {
   });
 }
 
-// ── Connexion ──
-async function connecter(jeton, memoriser) {
-  TOKEN = jeton.trim();
+// ── Chiffrement : le jeton GitHub est chiffré avec le mot de passe de chaque utilisateur ──
+const enc = new TextEncoder(), dec = new TextDecoder();
+const b64 = buf => { let t = ""; new Uint8Array(buf).forEach(c => t += String.fromCharCode(c)); return btoa(t); };
+const unb64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+async function deriver(mdp, sel, iterations) {
+  const base = await crypto.subtle.importKey("raw", enc.encode(mdp), "PBKDF2", false, ["deriveKey"]);
+  return crypto.subtle.deriveKey({ name: "PBKDF2", salt: sel, iterations, hash: "SHA-256" }, base, { name: "AES-GCM", length: 256 }, false, ["encrypt", "decrypt"]);
+}
+async function chiffrer(jeton, id, mdp) {
+  const sel = crypto.getRandomValues(new Uint8Array(16)), iv = crypto.getRandomValues(new Uint8Array(12));
+  const cle = await deriver(mdp, sel, ITERATIONS);
+  const ct = await crypto.subtle.encrypt({ name: "AES-GCM", iv, additionalData: enc.encode(id) }, cle, enc.encode(jeton));
+  return { sel: b64(sel), iv: b64(iv), it: ITERATIONS, ct: b64(ct) };
+}
+async function dechiffrer(u, mdp) {
+  const cle = await deriver(mdp, unb64(u.sel), u.it || ITERATIONS);
+  const pt = await crypto.subtle.decrypt({ name: "AES-GCM", iv: unb64(u.iv), additionalData: enc.encode(u.id) }, cle, unb64(u.ct));
+  return dec.decode(pt);
+}
+function genererMdp() {
+  const A = "abcdefghjkmnpqrstuvwxyz23456789", r = crypto.getRandomValues(new Uint32Array(12));
+  let m = ""; r.forEach((x, i) => { if (i && i % 4 === 0) m += "-"; m += A[x % A.length]; });
+  return m;
+}
+const normId = s => norm(s).replace(/[^a-z0-9._-]/g, "");
+
+// ── Fichier des utilisateurs (admin-users.json, public mais chiffré) ──
+async function lireUtilisateursPublic() {
+  const urls = [
+    `https://api.github.com/repos/${CONF.owner}/${CONF.repo}/contents/${USERS_FILE}?ref=${CONF.branch}`,
+    `${USERS_FILE}?t=${Date.now()}`
+  ];
+  for (const u of urls) {
+    try {
+      const r = await fetch(u, { cache: "no-store", headers: u.startsWith("https://api") ? { "Accept": "application/vnd.github.raw+json" } : {} });
+      if (r.status === 404) return { users: [] };
+      if (r.ok) return await r.json();
+    } catch (e) {}
+  }
+  throw new Error("Impossible de charger la liste des comptes. Vérifie ta connexion.");
+}
+async function lireUtilisateurs() {   // version authentifiée, toujours à jour
+  try {
+    const f = await gh(`/contents/${USERS_FILE}?ref=${CONF.branch}`);
+    const txt = dec.decode(unb64(f.content.replace(/\s/g, "")));
+    return JSON.parse(txt);
+  } catch (e) { if (e.status === 404) return { version: 1, users: [] }; throw e; }
+}
+async function ecrireUtilisateurs(data, message) {
+  data.version = 1;
+  data.users.sort((x, y) => x.id.localeCompare(y.id));
+  const blob = await gh("/git/blobs", { method: "POST", body: JSON.stringify({ content: JSON.stringify(data, null, 2) + "\n", encoding: "utf-8" }) });
+  await commit([{ path: USERS_FILE, sha: blob.sha }], message);
+}
+
+// ── Session ──
+function sauverSession(memoriser) {
+  try {
+    localStorage.removeItem(TOKEN_KEY); localStorage.removeItem(SESSION_KEY); sessionStorage.removeItem(SESSION_KEY);
+    (memoriser ? localStorage : sessionStorage).setItem(SESSION_KEY, JSON.stringify(SESSION));
+  } catch (e) {}
+}
+function lireSession() {
+  try {
+    const s = localStorage.getItem(SESSION_KEY) || sessionStorage.getItem(SESSION_KEY);
+    if (s) return { session: JSON.parse(s), memo: !!localStorage.getItem(SESSION_KEY) };
+    const t = localStorage.getItem(TOKEN_KEY) || sessionStorage.getItem(TOKEN_KEY);
+    if (t) return { session: { token: t, id: "", nom: "", role: "admin" }, memo: !!localStorage.getItem(TOKEN_KEY) };
+  } catch (e) {}
+  return null;
+}
+const estAdmin = () => SESSION && (SESSION.role === "admin" || !SESSION.id);
+
+async function ouvrir(session, memoriser) {
+  SESSION = session; TOKEN = session.token;
   const repo = await gh("");
   if (repo.permissions && repo.permissions.push === false) { const e = new Error(); e.status = 403; throw e; }
-  try {
-    if (memoriser) localStorage.setItem(TOKEN_KEY, TOKEN); else sessionStorage.setItem(TOKEN_KEY, TOKEN);
-  } catch (e) {}
+  if (SESSION.id) {   // le compte existe-t-il toujours ?
+    const data = await lireUtilisateurs();
+    const u = data.users.find(x => x.id === SESSION.id);
+    if (!u) { const e = new Error("Ce compte a été supprimé. Contacte l'administrateur du site."); throw e; }
+    SESSION.nom = u.nom; SESSION.role = u.role; SESSION.matieres = u.matieres || [];
+  }
+  sauverSession(memoriser);
   await chargerArbre();
-  $("#who-txt").textContent = `Connecté · ${CONF.owner}/${CONF.repo}`;
+  const qui = SESSION.id ? `${SESSION.nom} · ${SESSION.role === "admin" ? "Administrateur" : "Professeur"}` : `Propriétaire · ${CONF.owner}/${CONF.repo}`;
+  $("#who-txt").textContent = "Connecté · " + qui;
   $("#who").classList.add("on");
   $("#ecran-login").classList.add("hidden");
-  $("#ecran-ajout").classList.remove("hidden");
-  $("#ecran-gestion").classList.remove("hidden");
+  ["#ecran-ajout", "#ecran-gestion"].forEach(id => $(id).classList.remove("hidden"));
+  $("#ecran-mdp").classList.toggle("hidden", !SESSION.id);
+  $("#mdp-user").value = SESSION.id || "";
+  $("#ecran-users").classList.toggle("hidden", !estAdmin());
   majMatieres();
+  afficherMesMatieres();
+  if (estAdmin()) afficherUtilisateurs();
 }
 
 function deconnecter() {
-  try { localStorage.removeItem(TOKEN_KEY); sessionStorage.removeItem(TOKEN_KEY); } catch (e) {}
-  TOKEN = ""; location.reload();
+  try { [localStorage, sessionStorage].forEach(st => { st.removeItem(TOKEN_KEY); st.removeItem(SESSION_KEY); }); } catch (e) {}
+  TOKEN = ""; SESSION = null; location.reload();
 }
+
+function erreurLogin(texte) { $("#login-msg").className = "msg err"; $("#login-msg").textContent = texte; }
 
 $("#login-form").addEventListener("submit", async e => {
   e.preventDefault();
-  const jeton = $("#token").value;
-  if (!jeton.trim()) return;
+  const id = normId($("#user").value), mdp = $("#pass").value;
+  if (!id || !mdp) return erreurLogin("Indique ton identifiant et ton mot de passe.");
   $("#login-btn").disabled = true; $("#login-msg").className = "msg"; $("#login-msg").textContent = "Vérification…";
-  try { await connecter(jeton, $("#remember").checked); $("#token").value = ""; $("#login-msg").textContent = ""; }
-  catch (err) { $("#login-msg").className = "msg err"; $("#login-msg").textContent = messageErreur(err); }
+  try {
+    const data = await lireUtilisateursPublic();
+    const u = (data.users || []).find(x => x.id === id);
+    let jeton = null;
+    if (u) { try { jeton = await dechiffrer(u, mdp); } catch (err) {} }
+    if (!jeton) { await new Promise(r => setTimeout(r, 800)); throw new Error("Identifiant ou mot de passe incorrect."); }
+    await ouvrir({ token: jeton, id: u.id, nom: u.nom, role: u.role, matieres: u.matieres || [] }, $("#remember").checked);
+    $("#pass").value = ""; $("#login-msg").textContent = "";
+  } catch (err) { SESSION = null; erreurLogin(messageErreur(err)); }
   $("#login-btn").disabled = false;
 });
+
+$("#token-form").addEventListener("submit", async e => {
+  e.preventDefault();
+  const jeton = $("#token").value.trim();
+  if (!jeton) return;
+  $("#token-btn").disabled = true; $("#login-msg").className = "msg"; $("#login-msg").textContent = "Vérification…";
+  try { await ouvrir({ token: jeton, id: "", nom: "", role: "admin" }, $("#remember").checked); $("#token").value = ""; $("#login-msg").textContent = ""; }
+  catch (err) { SESSION = null; erreurLogin(messageErreur(err)); }
+  $("#token-btn").disabled = false;
+});
 $("#logout").addEventListener("click", deconnecter);
+
+// ── Gestion des comptes ──
+const listeMat = ms => (ms || []).map(m => `${m.matiere} (${m.annee} ${m.filiere})`).join(", ");
+function texteAcces(nom, id, mdp, matieres) {
+  const lien = location.href.split("#")[0].split("?")[0];
+  const mat = matieres && matieres.length ? `\nMatière : ${listeMat(matieres)}` : "";
+  return `Bonjour ${nom},\n\nVoici votre accès pour déposer vos cours sur le Drive Universitaire :\n\nLien : ${lien}\nIdentifiant : ${id}\nMot de passe : ${mdp}${mat}\n\nUne fois connecté(e), vous pouvez choisir votre propre mot de passe dans la rubrique « Mon mot de passe ».`;
+}
+async function copier(texte, bouton) {
+  try { await navigator.clipboard.writeText(texte); }
+  catch (e) { const ta = document.createElement("textarea"); ta.value = texte; document.body.appendChild(ta); ta.select(); document.execCommand("copy"); ta.remove(); }
+  if (bouton) { const t = bouton.textContent; bouton.textContent = "Copié ✓"; setTimeout(() => bouton.textContent = t, 2000); }
+}
+function montrerAcces(nom, id, mdp, titre, matieres) {
+  const t = texteAcces(nom, id, mdp, matieres);
+  const box = $("#msg-users");
+  box.className = "msg ok";
+  box.innerHTML = `<b>${esc(titre)}</b> Envoie ce message à ${esc(nom)} (le mot de passe ne sera plus affiché) :
+    <div class="cred">Identifiant : <code>${esc(id)}</code>\nMot de passe : <code>${esc(mdp)}</code></div>
+    <div class="links"><button class="btn ghost" id="copier">Copier le message</button></div>`;
+  $("#copier").addEventListener("click", () => copier(t, $("#copier")));
+}
+
+async function afficherUtilisateurs() {
+  const zone = $("#users");
+  zone.innerHTML = `<div class="empty" style="border:0">Chargement…</div>`;
+  try {
+    const data = await lireUtilisateurs();
+    USERS_CACHE = data.users; apercuImport();
+    if (!data.users.length) { zone.innerHTML = `<div class="empty" style="border:0">Aucun compte pour l'instant.</div>`; return; }
+    zone.innerHTML = data.users.map(u => `<div class="userrow">
+      <span class="avatar">${esc(initialesNom(u.nom || u.id))}</span>
+      <div class="p"><b>${esc(u.nom || u.id)}<span class="role ${u.role === "admin" ? "admin" : ""}">${u.role === "admin" ? "Admin" : "Prof"}</span></b>
+        <small>${esc(u.id)}${u.cree ? " · créé le " + esc(u.cree) : ""}</small>${u.matieres && u.matieres.length ? `<small>${esc(listeMat(u.matieres))}</small>` : ""}</div>
+      ${u.id === (SESSION && SESSION.id) ? `<small style="color:var(--ink-soft)">Toi</small>` : `
+      <span class="acts"><button class="mini" data-reset="${esc(u.id)}">Nouveau mot de passe</button>
+      <button class="mini danger" data-suppr-user="${esc(u.id)}" aria-label="Supprimer">✕</button></span>`}
+    </div>`).join("");
+  } catch (err) { zone.innerHTML = ""; $("#msg-users").className = "msg err"; $("#msg-users").textContent = messageErreur(err); }
+}
+function initialesNom(n) {
+  const m = String(n).replace(/^(m\.|mme|mr|dr|pr)\s+/i, "").split(/\s+/).filter(Boolean);
+  return (m.length > 1 ? m[0][0] + m[1][0] : (m[0] || "?").slice(0, 2)).toUpperCase();
+}
+
+$("#nu-nom").addEventListener("input", () => { if (!$("#nu-id").dataset.touche) $("#nu-id").value = $("#nu-nom").value.replace(/^(m\.|mme|mr|dr|pr)\.?\s+/i, "").split(/\s+/).map(normId).filter(Boolean).join("."); });
+$("#nu-id").addEventListener("input", () => { $("#nu-id").dataset.touche = "1"; });
+
+$("#user-form").addEventListener("submit", async e => {
+  e.preventDefault();
+  const nom = $("#nu-nom").value.trim(), id = normId($("#nu-id").value), role = val("role");
+  const msg = $("#msg-users");
+  if (!nom || !id) { msg.className = "msg err"; msg.textContent = "Indique le nom et l'identifiant."; return; }
+  $("#nu-btn").disabled = true; msg.className = "msg"; msg.textContent = "Création du compte…";
+  try {
+    const data = await lireUtilisateurs();
+    if (data.users.some(u => u.id === id)) throw new Error(`L'identifiant « ${id} » existe déjà.`);
+    const mdp = genererMdp();
+    data.users.push({ id, nom, role, cree: new Date().toLocaleDateString("fr-FR"), ...(await chiffrer(TOKEN, id, mdp)) });
+    await ecrireUtilisateurs(data, `👤 Nouveau compte : ${nom} (${id})`);
+    $("#nu-nom").value = ""; $("#nu-id").value = ""; delete $("#nu-id").dataset.touche;
+    await afficherUtilisateurs();
+    montrerAcces(nom, id, mdp, "Compte créé ✓");
+  } catch (err) { msg.className = "msg err"; msg.textContent = messageErreur(err); }
+  $("#nu-btn").disabled = false;
+});
+
+$("#users").addEventListener("click", async e => {
+  const reset = e.target.closest("[data-reset]"), suppr = e.target.closest("[data-suppr-user]");
+  if (!reset && !suppr) return;
+  const id = (reset || suppr).dataset.reset || (reset || suppr).dataset.supprUser;
+  const msg = $("#msg-users");
+  try {
+    const data = await lireUtilisateurs();
+    const u = data.users.find(x => x.id === id); if (!u) return afficherUtilisateurs();
+    if (suppr) {
+      if (!confirm(`Supprimer le compte de ${u.nom} ?`)) return;
+      msg.className = "msg"; msg.textContent = "Suppression…";
+      data.users = data.users.filter(x => x.id !== id);
+      await ecrireUtilisateurs(data, `👤 Suppression du compte ${id}`);
+      await afficherUtilisateurs();
+      msg.className = "msg ok"; msg.textContent = `Compte de ${u.nom} supprimé.`;
+    } else {
+      if (!confirm(`Créer un nouveau mot de passe pour ${u.nom} ? L'ancien ne marchera plus.`)) return;
+      msg.className = "msg"; msg.textContent = "Création du mot de passe…";
+      const mdp = genererMdp();
+      Object.assign(u, await chiffrer(TOKEN, id, mdp));
+      await ecrireUtilisateurs(data, `🔑 Nouveau mot de passe pour ${id}`);
+      montrerAcces(u.nom, id, mdp, "Nouveau mot de passe ✓", u.matieres);
+    }
+  } catch (err) { msg.className = "msg err"; msg.textContent = messageErreur(err); }
+});
+
+// ── Création de plusieurs comptes ──
+const sansTitre = n => String(n).replace(/^(m\.|mr\.?|mme\.?|mlle\.?|dr\.?|pr\.?)\s*/i, "").trim();
+const idDepuisNom = n => sansTitre(n).split(/\s+/).map(normId).filter(Boolean).join(".");
+function analyserImport() {
+  const a = val("imp-annee"), f = val("imp-filiere"), comptes = new Map();
+  $("#imp-txt").value.split("\n").forEach(ligne => {
+    const [nom, mat] = ligne.split(";").map(x => (x || "").replace(/\s+/g, " ").trim());
+    const id = nom ? idDepuisNom(nom) : "";
+    if (!id) return;
+    if (!comptes.has(id)) comptes.set(id, { id, nom, matieres: [] });
+    if (mat && !comptes.get(id).matieres.some(m => m.matiere === propre(mat))) comptes.get(id).matieres.push({ annee: a, filiere: f, matiere: propre(mat) });
+  });
+  return [...comptes.values()];
+}
+function apercuImport() {
+  const liste = analyserImport();
+  $("#imp-btn").disabled = !liste.length;
+  const nouveaux = liste.filter(c => !USERS_CACHE.some(u => u.id === c.id)).length;
+  $("#imp-btn").textContent = nouveaux ? `Créer ${nouveaux} compte${nouveaux > 1 ? "s" : ""}` : "Mettre à jour les matières";
+  $("#imp-apercu").innerHTML = liste.length ? `<div class="doclist">${liste.map(c => {
+    const existe = USERS_CACHE.some(u => u.id === c.id);
+    return `<div class="userrow"><span class="avatar">${esc(initialesNom(c.nom))}</span>
+      <div class="p"><b>${esc(c.nom)}</b><small>${esc(c.id)}${c.matieres.length ? " · " + esc(c.matieres.map(m => m.matiere).join(", ")) : ""}</small></div>
+      <span class="tag ${existe ? "exist" : ""}">${existe ? "Déjà créé" : "Nouveau"}</span></div>`;
+  }).join("")}</div>` : "";
+}
+pills("#p-imp-annee", "imp-annee", ANNEES.map(a => [a, a]), "L2");
+pills("#p-imp-filiere", "imp-filiere", Object.keys(FILIERES).map(f => [f, f]), "MRT");
+$("#imp-txt").value = IMPORT_DEFAUT;
+["#imp-txt", "#p-imp-annee", "#p-imp-filiere"].forEach(id => $(id).addEventListener(id === "#imp-txt" ? "input" : "change", apercuImport));
+
+$("#imp-btn").addEventListener("click", async () => {
+  const liste = analyserImport(), msg = $("#msg-imp"), btn = $("#imp-btn");
+  if (!liste.length) return;
+  btn.disabled = true; msg.className = "msg"; msg.textContent = "Préparation…";
+  try {
+    const data = await lireUtilisateurs(), crees = [];
+    let maj = 0, i = 0;
+    for (const c of liste) {
+      const ex = data.users.find(u => u.id === c.id);
+      if (ex) {
+        const avant = (ex.matieres || []).length;
+        ex.matieres = [...(ex.matieres || [])];
+        c.matieres.forEach(m => { if (!ex.matieres.some(x => x.matiere === m.matiere && x.annee === m.annee && x.filiere === m.filiere)) ex.matieres.push(m); });
+        if (ex.matieres.length !== avant) maj++;
+        continue;
+      }
+      msg.textContent = `Création du compte ${++i} : ${c.nom}…`;
+      const mdp = genererMdp();
+      data.users.push({ id: c.id, nom: c.nom, role: "prof", matieres: c.matieres, cree: new Date().toLocaleDateString("fr-FR"), ...(await chiffrer(TOKEN, c.id, mdp)) });
+      crees.push({ ...c, mdp });
+    }
+    if (!crees.length && !maj) { msg.className = "msg ok"; msg.textContent = "Tous ces comptes existent déjà, rien à changer."; btn.disabled = false; return; }
+    msg.textContent = "Enregistrement…";
+    await ecrireUtilisateurs(data, crees.length ? `👤 ${crees.length} nouveau${crees.length > 1 ? "x" : ""} compte${crees.length > 1 ? "s" : ""} (${val("imp-annee")} ${val("imp-filiere")})` : "👤 Mise à jour des matières");
+    await afficherUtilisateurs();
+    if (!crees.length) { msg.className = "msg ok"; msg.textContent = `Matières mises à jour pour ${maj} compte${maj > 1 ? "s" : ""}.`; btn.disabled = false; return; }
+    const tout = crees.map(c => `${c.nom} — ${listeMat(c.matieres)}\nIdentifiant : ${c.id}\nMot de passe : ${c.mdp}`).join("\n\n");
+    msg.className = "msg ok";
+    msg.innerHTML = `<b>${crees.length} compte${crees.length > 1 ? "s" : ""} créé${crees.length > 1 ? "s" : ""} ✓</b> Copie le message de chaque prof et envoie-le-lui. <b>Les mots de passe ne seront plus affichés</b> après avoir quitté la page.
+      <div class="doclist recap" style="margin-top:10px;background:var(--paper)">${crees.map((c, k) => `<div class="userrow">
+        <span class="avatar">${esc(initialesNom(c.nom))}</span>
+        <div class="p" style="color:var(--ink)"><b>${esc(c.nom)}</b><small>${esc(listeMat(c.matieres))}</small>
+          <small style="margin-top:4px">Identifiant : <code>${esc(c.id)}</code> · Mot de passe : <code>${esc(c.mdp)}</code></small></div>
+        <span class="acts"><button class="mini" data-copier="${k}">Copier le message</button></span></div>`).join("")}</div>
+      <div class="links"><button class="btn ghost" id="copier-tout">Copier tous les accès</button></div>`;
+    msg.querySelectorAll("[data-copier]").forEach(b => b.addEventListener("click", () => { const c = crees[+b.dataset.copier]; copier(texteAcces(c.nom, c.id, c.mdp, c.matieres), b); }));
+    $("#copier-tout").addEventListener("click", () => copier(tout, $("#copier-tout")));
+  } catch (err) { msg.className = "msg err"; msg.textContent = messageErreur(err); }
+  btn.disabled = false;
+});
+
+// ── Matières du prof connecté : présélection ──
+function choisirMatiere(m) {
+  const ra = document.getElementById("annee-" + m.annee), rf = document.getElementById("filiere-" + m.filiere);
+  if (ra) ra.checked = true;
+  if (rf) rf.checked = true;
+  majMatieres();
+  const opts = [...$("#matiere").options].map(o => o.value);
+  const trouve = opts.find(o => o !== "__new" && norm(o) === norm(m.matiere));
+  if (trouve) { $("#matiere").value = trouve; $("#matiere-new").value = ""; }
+  else { $("#matiere").value = "__new"; $("#matiere-new").value = m.matiere; }
+  majNouvelle();
+}
+function afficherMesMatieres() {
+  const ms = (SESSION && SESSION.matieres) || [];
+  $("#mes-mat").classList.toggle("hidden", !ms.length);
+  if (!ms.length) return;
+  $("#mes-mat").innerHTML = (ms.length > 1 ? "Tes matières :" : "Ta matière :") + ms.map((m, i) => ` <button type="button" data-mamat="${i}">${esc(m.matiere)} · ${esc(m.annee)} ${esc(m.filiere)}</button>`).join("");
+  choisirMatiere(ms[0]);
+}
+$("#mes-mat").addEventListener("click", e => { const b = e.target.closest("[data-mamat]"); if (b) choisirMatiere(SESSION.matieres[+b.dataset.mamat]); });
+
+// ── Changer mon mot de passe ──
+$("#mdp-form").addEventListener("submit", async e => {
+  e.preventDefault();
+  const m1 = $("#mdp1").value, m2 = $("#mdp2").value, msg = $("#msg-mdp");
+  if (m1.length < 8) { msg.className = "msg err"; msg.textContent = "8 caractères minimum."; return; }
+  if (m1 !== m2) { msg.className = "msg err"; msg.textContent = "Les deux mots de passe ne sont pas identiques."; return; }
+  $("#mdp-btn").disabled = true; msg.className = "msg"; msg.textContent = "Enregistrement…";
+  try {
+    const data = await lireUtilisateurs();
+    const u = data.users.find(x => x.id === SESSION.id);
+    if (!u) throw new Error("Ce compte n'existe plus.");
+    Object.assign(u, await chiffrer(TOKEN, u.id, m1));
+    await ecrireUtilisateurs(data, `🔑 Changement de mot de passe (${u.id})`);
+    $("#mdp1").value = ""; $("#mdp2").value = "";
+    msg.className = "msg ok"; msg.textContent = "Mot de passe changé ✓ Utilise-le à ta prochaine connexion.";
+  } catch (err) { msg.className = "msg err"; msg.textContent = messageErreur(err); }
+  $("#mdp-btn").disabled = false;
+});
 
 // ── Formulaire ──
 function pills(id, nom, options, defaut) {
@@ -304,6 +713,7 @@ function pills(id, nom, options, defaut) {
 pills("#p-annee", "annee", ANNEES.map(a => [a, a]), "L2");
 pills("#p-filiere", "filiere", Object.keys(FILIERES).map(f => [f, f]), "GI");
 pills("#p-type", "type", TYPES, "Cours");
+pills("#p-role", "role", [["prof", "Professeur"], ["admin", "Administrateur"]], "prof");
 const val = nom => (document.querySelector(`input[name="${nom}"]:checked`) || {}).value;
 
 function matieresExistantes(a, f) {
@@ -484,13 +894,16 @@ $("#docs").addEventListener("click", async e => {
   } catch (err) { msg.className = "msg err"; msg.textContent = messageErreur(err); b.disabled = false; }
 });
 
-// ── Démarrage : reconnexion automatique si un jeton est mémorisé ──
+// ── Démarrage : reconnexion automatique ──
 (async () => {
-  let t = ""; try { t = localStorage.getItem(TOKEN_KEY) || sessionStorage.getItem(TOKEN_KEY) || ""; } catch (e) {}
-  if (!t) return;
+  const l = lireSession();
+  if (!l) return;
   $("#login-msg").textContent = "Reconnexion…";
-  try { await connecter(t, !!localStorage.getItem(TOKEN_KEY)); $("#login-msg").textContent = ""; }
-  catch (err) { $("#login-msg").className = "msg err"; $("#login-msg").textContent = messageErreur(err); }
+  try { await ouvrir(l.session, l.memo); $("#login-msg").textContent = ""; }
+  catch (err) {
+    try { [localStorage, sessionStorage].forEach(st => st.removeItem(SESSION_KEY)); } catch (e) {}
+    SESSION = null; erreurLogin(messageErreur(err));
+  }
 })();
 </script>
 </body>
