@@ -1,0 +1,141 @@
+{
+  "version": 1,
+  "users": [
+    {
+      "id": "elmi.ahmed",
+      "nom": "Mr. Elmi Ahmed",
+      "role": "prof",
+      "matieres": [
+        {
+          "annee": "L2",
+          "filiere": "MRT",
+          "matiere": "CCNA Module 2"
+        }
+      ],
+      "cree": "13/10/2026",
+      "sel": "FZLTtUJ2J2zZjVxPMlfXZw==",
+      "iv": "AOqN559mOj8kwD0t",
+      "it": 600000,
+      "ct": "rSmjYWETpH+fo4U8z1aR06aEs6gFetaId1IUQjCFFg6FjLyMr/Y/EFsqhpeAR19yW5L7bdTwoeJGRzsqkbladhRwMMr5K1ty/w5sJgOPLi1WvGb8nMRpWRLoWCpaOoB1gsds1hPrAXcN3AkvXA=="
+    },
+    {
+      "id": "ibrahim.med",
+      "nom": "Mr. Ibrahim Med",
+      "role": "prof",
+      "matieres": [
+        {
+          "annee": "L2",
+          "filiere": "MRT",
+          "matiere": "Téléphonie sur IP et service"
+        }
+      ],
+      "cree": "13/10/2026",
+      "sel": "MOeuloN0cSSJG05FD+tFJg==",
+      "iv": "l6HyqifynYobrxEy",
+      "it": 600000,
+      "ct": "NJXBRjrg/3p0ojqQQbgdJr5B7tx8PFzQIORVVBaMQsHrfAhpyIIcgaMNuDZ7bb7Ym8ARr+6Q436at0SScKrzDohOy9G3cpANFn54St04Qrslr79dM7Om2u1uBiH1hfMeZx1D5+OZBunuc4PQug=="
+    },
+    {
+      "id": "issa.darsa",
+      "nom": "Mr. Issa Darsa",
+      "role": "prof",
+      "matieres": [
+        {
+          "annee": "L2",
+          "filiere": "MRT",
+          "matiere": "TEC III"
+        }
+      ],
+      "cree": "13/10/2026",
+      "sel": "gOm0LQIg9eJUr0foxwbqvg==",
+      "iv": "PR/tVLShrw5xoW4W",
+      "it": 600000,
+      "ct": "+OmmBjWMFgPsp747ta5bm2jsAzKsZoEkpf206PuxN/Dvk5XBYsmQRgS7N1Z16QGa7PIwQMXkpGpVyKE+enC5RYUsDk5fxkcQEQqpSExVy3f1FfNbbaTWcQxPk/IAlT3TnkTRU+Zi8iqDKi2Tjw=="
+    },
+    {
+      "id": "mahad.osman",
+      "nom": "Mr. Mahad Osman",
+      "role": "prof",
+      "matieres": [
+        {
+          "annee": "L2",
+          "filiere": "MRT",
+          "matiere": "Administration des services réseaux (Windows)"
+        }
+      ],
+      "cree": "13/10/2026",
+      "sel": "VPdp795CWFPt7oirCsqWKA==",
+      "iv": "7gS3sWppItMbVbxn",
+      "it": 600000,
+      "ct": "Ro0Wa7ewWBJ4bruhHZL9iFCqjYfEEh+7zXqf7V6ZV65lZyttzJfPd1szDK4GMRkrGSN8DIh/pHx2LF/yIDdY9+zfFrlA+3XO3aemKyp9PHsqXjMRanVkkLmqYJQnvbzxU709gKhBVK34lLiWnw=="
+    },
+    {
+      "id": "mohamed.ahmed",
+      "nom": "Mr. Mohamed Ahmed",
+      "role": "prof",
+      "matieres": [
+        {
+          "annee": "L2",
+          "filiere": "MRT",
+          "matiere": "Initiation au Python"
+        }
+      ],
+      "cree": "13/10/2026",
+      "sel": "8BSD2+KApsm2zWWiikWd3g==",
+      "iv": "yNWJ6ia1+6Oj7V7S",
+      "it": 600000,
+      "ct": "670HwCzGshSp08vquhm0AgY3H/AyeqsOgvZa9eEeHrEtvNZglrMisdnetpb4JzF9RwreQ+ECdbA998lPSDBAKiM/exW5kRbNGTG3rCCI2c7BpYn/1d3M95xNdZ3tK93v47V6llvQbfMNZ7E+NA=="
+    },
+    {
+      "id": "mohamed.houssein",
+      "nom": "Mr. Mohamed Houssein",
+      "role": "prof",
+      "matieres": [
+        {
+          "annee": "L2",
+          "filiere": "MRT",
+          "matiere": "Technologie réseaux mobile"
+        }
+      ],
+      "cree": "13/10/2026",
+      "sel": "MAYOJl2ngatbvsxsa+pRCA==",
+      "iv": "ZkxgFe+RVaP+mZaJ",
+      "it": 600000,
+      "ct": "yJspTrsD+tGYhwAU6+ooXz6zgKPTSD3Aqggq9KCvuxzq3FWEtkwxPUPihIgVdajuZ/4lzCX4la9PujB71onxa9LV5Vi8YJ5h4Y7GsOJmj59QsOFCZfc/eaj4qos08kFWp3TxK/UR4KfDeEiZ+Q=="
+    },
+    {
+      "id": "mohamed.ibrahim",
+      "nom": "Mr. Mohamed Ibrahim",
+      "role": "prof",
+      "matieres": [
+        {
+          "annee": "L2",
+          "filiere": "MRT",
+          "matiere": "Introduction à Linux"
+        }
+      ],
+      "cree": "13/10/2026",
+      "sel": "ohkvlxhLWdRtWsMXsyMIVA==",
+      "iv": "bG5DR0hKnsanUcEV",
+      "it": 600000,
+      "ct": "XlJrrVpXDU2MjoWPIEex03t+4nSu8awL7hhatnfuJDbcHABdxNx+jyV/GZBKcfMUfTw8W41rR4Nhll3INCtJ9nRruT5Je8uPZSFEP+unNVFt72fG6t8g6pbp/7/mJcgzm1s0B5fClLAVeyXlyg=="
+    },
+    {
+      "id": "soumeya.bode",
+      "nom": "Mme Soumeya Bode",
+      "role": "prof",
+      "matieres": [
+        {
+          "annee": "L2",
+          "filiere": "MRT",
+          "matiere": "Anglais Technique"
+        }
+      ],
+      "cree": "13/10/2026",
+      "sel": "hcp5gJ3akLmx148YyK3KzQ==",
+      "iv": "5ndM1je7BbIaq5vY",
+      "it": 600000,
+      "ct": "IwLOAjhdCLHNIkNcupmVZJqXvyPsZwyQVR46bWx9jF0kOkeF3wdj9xItpgcVyXgr549klbFfmWr6tN6F2AT2P4Zuw/UwqbAlWGIIEMN6mNG6gMlZuiyjJBCul8JSA+5PMb4UskyDCMrYNMFlhw=="
+    }
+  ]
+}
