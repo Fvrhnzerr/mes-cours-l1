@@ -159,6 +159,32 @@ def dates_ajout_git():
     return dates
 
 
+# ==========================================
+# 🎛️ 2 bis. RÉGLAGES MODIFIABLES DEPUIS LA PAGE ADMIN (site-config.json)
+#    Les valeurs ci-dessus servent de valeurs par défaut.
+# ==========================================
+CONFIG_FICHIER = "site-config.json"
+try:
+    with open(CONFIG_FICHIER, encoding="utf-8") as _f:
+        _cfg = json.load(_f)
+except (FileNotFoundError, ValueError):
+    _cfg = {}
+_mdp = _cfg.get("mot_de_passe") or {}
+_sur = _cfg.get("surprise") or {}
+MODE_MAINTENANCE          = bool(_cfg.get("maintenance", MODE_MAINTENANCE))
+MESSAGE_SPECIAL           = str(_cfg.get("message", MESSAGE_SPECIAL))
+NOUVEAU_JOURS             = int(_cfg.get("nouveau_jours", NOUVEAU_JOURS) or NOUVEAU_JOURS)
+NOM_SIGNATURE_NORMAL      = _cfg.get("signature") or NOM_SIGNATURE_NORMAL
+NOM_SIGNATURE_MAINTENANCE = _cfg.get("signature_maintenance") or NOM_SIGNATURE_MAINTENANCE
+MOT_DE_PASSE_ACTIF        = bool(_mdp.get("actif", MOT_DE_PASSE_ACTIF))
+LOGIN_REQUIS              = _mdp.get("login") or LOGIN_REQUIS
+MDP_REQUIS                = _mdp.get("mdp") or MDP_REQUIS
+SURPRISE_ACTIVE           = bool(_sur.get("actif", SURPRISE_ACTIVE))
+SURPRISE_NOM              = _sur.get("nom") or SURPRISE_NOM
+SURPRISE_TITRE            = _sur.get("titre") or SURPRISE_TITRE
+SURPRISE_MESSAGE          = _sur.get("message") or SURPRISE_MESSAGE
+NOMS_PERSO                = _cfg.get("noms_matieres") or {}   # "MRT/L2/Dossier": "Nom affiché"
+
 maintenant = datetime.datetime.now()
 date_maj = maintenant.strftime("%d/%m/%Y à %H:%M")
 
@@ -800,7 +826,7 @@ else:
                             })
                     total_fichiers += len(docs)
                     data.setdefault(annee, {}).setdefault(filiere, {})[matiere] = {
-                        "titre": nom_matiere(matiere),
+                        "titre": NOMS_PERSO.get(f"{filiere}/{annee}/{matiere}") or nom_matiere(matiere),
                         "docs": docs,
                     }
 
