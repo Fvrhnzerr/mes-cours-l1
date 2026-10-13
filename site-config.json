@@ -1,6 +1,6 @@
 {
   "maintenance": false,
-  "message": "",
+  "message": "rentrez pas chez vous et bossez",
   "nouveau_jours": 14,
   "signature": "",
   "mot_de_passe": {
@@ -9,7 +9,7 @@
     "mdp": "fafa"
   },
   "surprise": {
-    "actif": true,
+    "actif": false,
     "nom": "Bachir",
     "titre": "sayez frère t'abuse lache insta et bosse et rentre pas chez toi",
     "message": ""
