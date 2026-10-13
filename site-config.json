@@ -1,0 +1,17 @@
+{
+  "maintenance": false,
+  "message": "",
+  "nouveau_jours": 14,
+  "signature": "",
+  "mot_de_passe": {
+    "actif": true,
+    "login": "fafa",
+    "mdp": "fafa"
+  },
+  "surprise": {
+    "actif": false,
+    "nom": "Bachir",
+    "titre": "Bachir, t'es une légende ! 🏆",
+    "message": ""
+  }
+}
