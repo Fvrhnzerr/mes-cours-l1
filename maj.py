@@ -40,6 +40,12 @@ MDP_REQUIS   = os.environ.get("DRIVE_MDP") or "IAD2026"
 #    ex : "☀️ Plus que deux mois avant l'été !"  ou  "🌙 Ramadan Mubarak !"
 MESSAGE_SPECIAL = ""
 
+# 🎁 Bouton surprise sur la page d'accueil (False = caché)
+SURPRISE_ACTIVE  = True
+SURPRISE_NOM     = "Bachir"
+SURPRISE_TITRE   = "Bachir, t'es une légende ! 🏆"
+SURPRISE_MESSAGE = "Officiellement élu meilleur camarade de la promo par le Drive Universitaire. Merci d'être toujours là pour les autres — et maintenant, au boulot, les partiels n'attendent pas 😄"
+
 # 🆕 Un fichier est marqué « Nouveau » pendant ce nombre de jours après son ajout
 NOUVEAU_JOURS = 14
 
@@ -354,6 +360,27 @@ footer p { margin:4px 0; }
 .sign { color:var(--ink); font-weight:600; }
 .copyright { max-width:520px; margin:14px auto 0 !important; font-size:.75rem; opacity:.8; }
 
+/* ── Surprise ── */
+.surprise-btn { display:flex; align-items:center; gap:14px; width:100%; margin-top:40px; padding:18px 20px; border-radius:var(--radius); cursor:pointer; text-align:left;
+  border:1px dashed var(--accent-line); background:var(--paper); color:var(--ink); font:inherit; transition:transform .15s, box-shadow .15s, border-color .15s; }
+.surprise-btn:hover { transform:translateY(-2px); box-shadow:var(--shadow-hover); border-color:var(--accent); }
+.surprise-btn .em { font-size:1.8rem; line-height:1; display:inline-block; animation:wiggle 2.4s ease-in-out infinite; }
+.surprise-btn b { display:block; font-weight:600; }
+.surprise-btn small { display:block; color:var(--ink-soft); font-size:.85rem; }
+@keyframes wiggle { 0%,80%,100% { transform:rotate(0); } 85% { transform:rotate(-14deg); } 90% { transform:rotate(12deg); } 95% { transform:rotate(-6deg); } }
+.surprise { position:fixed; inset:0; z-index:60; display:none; align-items:center; justify-content:center; padding:16px; background:rgba(15,23,42,.6); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px); }
+.surprise.open { display:flex; }
+.surprise canvas { position:fixed; inset:0; width:100%; height:100%; pointer-events:none; }
+.surprise-card { position:relative; max-width:440px; width:100%; text-align:center; background:var(--paper); border-radius:22px; padding:34px 26px 26px; box-shadow:0 30px 80px rgba(0,0,0,.4); animation:pop .55s cubic-bezier(.2,1.6,.4,1) both; }
+.surprise-card .big { font-size:4.2rem; line-height:1; display:inline-block; animation:bounce 1.2s ease-in-out infinite; }
+.surprise-card h2 { font-size:1.6rem; font-weight:700; letter-spacing:-.03em; margin:14px 0 8px; line-height:1.2; }
+.surprise-card p { color:var(--ink-soft); margin:0 0 22px; }
+.surprise-card .btn { justify-content:center; }
+.surprise-card .encore { display:block; margin:12px auto 0; background:none; border:0; color:var(--accent); font-weight:500; cursor:pointer; font-size:.9rem; }
+@keyframes pop { from { transform:scale(.4) rotate(-8deg); opacity:0; } to { transform:none; opacity:1; } }
+@keyframes bounce { 0%,100% { transform:translateY(0) scale(1); } 50% { transform:translateY(-10px) scale(1.08); } }
+@media (prefers-reduced-motion: reduce) { .surprise-btn .em, .surprise-card, .surprise-card .big { animation:none; } }
+
 /* ── Connexion ── */
 #login { position:fixed; inset:0; background:var(--bg); display:none; align-items:center; justify-content:center; z-index:100; padding:16px; }
 .login-box { background:var(--paper); border:1px solid var(--line); border-radius:18px; padding:32px 26px; width:100%; max-width:360px; text-align:center; box-shadow:var(--shadow-hover); }
@@ -400,6 +427,17 @@ __ANALYTICS__
   <p>Conçu par <span class="sign" id="signature"></span></p>
   <p class="copyright">© <span id="annee-copy"></span> <span id="signature-copy"></span> — Tous droits réservés.<br>Toute reproduction, copie ou redistribution de ce code est interdite sans autorisation écrite.</p>
 </footer>
+
+<div class="surprise" id="surprise" aria-hidden="true">
+  <canvas id="confettis"></canvas>
+  <div class="surprise-card" role="dialog" aria-modal="true" aria-labelledby="surprise-titre">
+    <span class="big">🎉</span>
+    <h2 id="surprise-titre"></h2>
+    <p id="surprise-texte"></p>
+    <button class="btn" id="surprise-ok">Merci ! 😎</button>
+    <button class="encore" id="surprise-encore">Encore des confettis !</button>
+  </div>
+</div>
 
 <div class="modal" id="modal" aria-hidden="true">
   <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="modal-name">
@@ -515,6 +553,8 @@ function vueAccueil() {
       ${badgeNew(nbNew(docs))}
     </div>`;
   }).join("")}</div>`);
+  if (CFG.surprise) html += `<button class="surprise-btn" id="surprise-btn"><span class="em">👀</span>
+    <span><b>Si t'es ${esc(CFG.surprise.nom)}, appuie ici</b><small>Les autres, on ne regarde pas…</small></span></button>`;
   return html;
 }
 
@@ -658,6 +698,45 @@ $("#login-form").addEventListener("submit", e => {
   } else $("#login-error").style.display = "block";
 });
 
+// ── Surprise ──
+let confettiAnim = null;
+function confettis() {
+  const cv = $("#confettis"), ctx = cv.getContext("2d"), dpr = window.devicePixelRatio || 1;
+  cv.width = innerWidth * dpr; cv.height = innerHeight * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const couleurs = ["#2563eb", "#f59e0b", "#16a34a", "#ec4899", "#9333ea", "#ef4444", "#06b6d4"];
+  const parts = Array.from({ length: 180 }, (_, i) => {
+    const gauche = i % 2 === 0, ang = (gauche ? -60 : -120) * Math.PI / 180 + (Math.random() - .5) * .9, v = 9 + Math.random() * 9;
+    return { x: gauche ? 0 : innerWidth, y: innerHeight * .75, vx: Math.cos(ang) * v, vy: Math.sin(ang) * v, r: Math.random() * Math.PI,
+      vr: (Math.random() - .5) * .3, w: 6 + Math.random() * 6, h: 8 + Math.random() * 8, c: couleurs[i % couleurs.length] };
+  });
+  cancelAnimationFrame(confettiAnim);
+  const debut = performance.now();
+  (function boucle(t) {
+    ctx.clearRect(0, 0, innerWidth, innerHeight);
+    parts.forEach(p => { p.vy += .25; p.vx *= .99; p.x += p.vx; p.y += p.vy; p.r += p.vr;
+      ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.r); ctx.fillStyle = p.c; ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h * Math.abs(Math.cos(p.r * 2))); ctx.restore(); });
+    if (t - debut < 4500) confettiAnim = requestAnimationFrame(boucle); else ctx.clearRect(0, 0, innerWidth, innerHeight);
+  })(debut);
+}
+function ouvrirSurprise() {
+  $("#surprise-titre").textContent = CFG.surprise.titre;
+  $("#surprise-texte").textContent = CFG.surprise.message;
+  $("#surprise").classList.add("open"); $("#surprise").setAttribute("aria-hidden", "false");
+  document.body.classList.add("no-scroll");
+  if (!matchMedia("(prefers-reduced-motion: reduce)").matches) confettis();
+  $("#surprise-ok").focus();
+}
+function fermerSurprise() {
+  $("#surprise").classList.remove("open"); $("#surprise").setAttribute("aria-hidden", "true");
+  document.body.classList.remove("no-scroll"); cancelAnimationFrame(confettiAnim);
+}
+document.addEventListener("click", e => {
+  if (e.target.closest("#surprise-btn")) ouvrirSurprise();
+  else if (e.target.closest("#surprise-ok") || e.target.id === "surprise") fermerSurprise();
+  else if (e.target.closest("#surprise-encore")) confettis();
+});
+document.addEventListener("keydown", e => { if (e.key === "Escape" && $("#surprise").classList.contains("open")) fermerSurprise(); });
+
 render();
 </script>
 </body>
@@ -729,6 +808,7 @@ else:
         "filieres": FILIERES,
         "nouveauJours": NOUVEAU_JOURS,
         "message": MESSAGE_SPECIAL,
+        "surprise": {"nom": SURPRISE_NOM, "titre": SURPRISE_TITRE, "message": SURPRISE_MESSAGE} if SURPRISE_ACTIVE else None,
         "signature": NOM_SIGNATURE_NORMAL,
         "maj": date_maj,
         "annee": maintenant.year,
