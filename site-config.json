@@ -1,10 +1,10 @@
 {
-  "maintenance": false,
+  "maintenance": true,
   "message": "",
   "nouveau_jours": 14,
   "signature": "",
   "mot_de_passe": {
-    "actif": true,
+    "actif": false,
     "login": "fafa",
     "mdp": "fafa"
   },
