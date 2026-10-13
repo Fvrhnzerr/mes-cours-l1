@@ -41,7 +41,7 @@ MDP_REQUIS   = os.environ.get("DRIVE_MDP") or "IAD2026"
 MESSAGE_SPECIAL = ""
 
 # 🎁 Bouton surprise sur la page d'accueil (False = caché)
-SURPRISE_ACTIVE  = True
+SURPRISE_ACTIVE  = False
 SURPRISE_NOM     = "Bachir"
 SURPRISE_TITRE   = "Bachir, t'es une légende ! 🏆"
 SURPRISE_MESSAGE = "Officiellement élu meilleur camarade de la promo par le Drive Universitaire. Merci d'être toujours là pour les autres — et maintenant, au boulot, les partiels n'attendent pas 😄"
