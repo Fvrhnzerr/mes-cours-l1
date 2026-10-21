@@ -1,7 +1,7 @@
 # Reconstruit et publie le Drive Universitaire à chaque modification du dépôt.
 #
 # • Cloudflare Pages (site protégé par Cloudflare Access) : utilisé dès que les
-#   secrets CLOUDFLARE_API_TOKEN et CLOUDFLARE_ACCOUNT_ID existent dans le dépôt.
+#   secret CLOUDFLARE_API_TOKEN existe dans le dépôt (Settings → Secrets → Actions).
 # • GitHub Pages : seulement tant que le dépôt est public (transition).
 name: Publier le site
 
@@ -21,6 +21,7 @@ concurrency:
 
 env:
   CF_PROJET: drive-universitaire   # nom du projet Cloudflare Pages
+  CF_COMPTE: 509f916a38c3f5f0d7055a72d535dcd3   # Account ID Cloudflare (pas secret)
 
 jobs:
   construire:
@@ -83,7 +84,7 @@ jobs:
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          accountId: ${{ env.CF_COMPTE }}
           preCommands: wrangler pages project create ${{ env.CF_PROJET }} --production-branch=main || true
           command: pages deploy _site --project-name=${{ env.CF_PROJET }} --branch=main --commit-dirty=true
 
