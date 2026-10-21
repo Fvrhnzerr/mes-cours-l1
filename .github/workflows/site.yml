@@ -1,0 +1,100 @@
+# Reconstruit et publie le Drive Universitaire à chaque modification du dépôt.
+#
+# • Cloudflare Pages (site protégé par Cloudflare Access) : utilisé dès que les
+#   secrets CLOUDFLARE_API_TOKEN et CLOUDFLARE_ACCOUNT_ID existent dans le dépôt.
+# • GitHub Pages : seulement tant que le dépôt est public (transition).
+name: Publier le site
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:   # bouton « Run workflow » pour relancer à la main
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: publication
+  cancel-in-progress: true
+
+env:
+  CF_PROJET: drive-universitaire   # nom du projet Cloudflare Pages
+
+jobs:
+  construire:
+    runs-on: ubuntu-latest
+    outputs:
+      cloudflare: ${{ steps.secrets.outputs.cloudflare }}
+    steps:
+      - name: Récupérer le dépôt (avec l'historique, pour le badge « Nouveau »)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Installer Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Générer index.html
+        run: python maj.py
+
+      - name: Rassembler les fichiers publiés
+        run: |
+          mkdir -p _site
+          cp index.html admin.html _site/
+          for f in admin-users.json site-config.json; do [ -f "$f" ] && cp "$f" _site/ || true; done
+          cp -r cours _site/
+          find _site -name ".DS_Store" -delete
+          # Pas de mise en cache des données qui changent souvent
+          printf '/admin-users.json\n  Cache-Control: no-store\n/index.html\n  Cache-Control: no-cache\n/admin.html\n  Cache-Control: no-cache\n' > _site/_headers
+
+      - name: Cloudflare configuré ?
+        id: secrets
+        env:
+          T: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: echo "cloudflare=$([ -n "$T" ] && echo oui || echo non)" >> "$GITHUB_OUTPUT"
+
+      - name: Garder les fichiers pour la publication
+        uses: actions/upload-artifact@v4
+        with:
+          name: site
+          path: _site
+          retention-days: 1
+
+      - name: Préparer GitHub Pages
+        if: ${{ !github.event.repository.private }}
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  cloudflare:
+    needs: construire
+    if: needs.construire.outputs.cloudflare == 'oui'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: site
+          path: _site
+      - name: Publier sur Cloudflare Pages
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          preCommands: wrangler pages project create ${{ env.CF_PROJET }} --production-branch=main || true
+          command: pages deploy _site --project-name=${{ env.CF_PROJET }} --branch=main --commit-dirty=true
+
+  github-pages:
+    needs: construire
+    if: ${{ !github.event.repository.private }}
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploiement.outputs.page_url }}
+    steps:
+      - name: Publier sur GitHub Pages
+        id: deploiement
+        uses: actions/deploy-pages@v4

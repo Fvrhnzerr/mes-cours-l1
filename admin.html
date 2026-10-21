@@ -377,7 +377,7 @@ const CONF = (() => {
 const ANNEES = ["L1", "L2", "L3"];
 const FILIERES = { GI: "Génie Informatique", MRT: "Maintenance Réseau Télécom", GE: "Gestion des Entreprises" };
 const TYPES = [["Cours", "Cours"], ["TD", "TD"], ["TP", "TP"], ["Sujets", "Sujets / examens"]];
-const TAILLE_MAX = 95 * 1024 * 1024;   // limite GitHub : 100 Mo par fichier
+const TAILLE_MAX = 25 * 1024 * 1024;   // limite Cloudflare Pages : 25 Mo par fichier
 const TOKEN_KEY = "drive-admin-token";        // ancienne version (jeton seul)
 const SESSION_KEY = "drive-admin-session";
 const USERS_FILE = "admin-users.json";
@@ -488,17 +488,21 @@ const normId = s => norm(s).replace(/[^a-z0-9._-]/g, "");
 
 // ── Fichier des utilisateurs (admin-users.json, public mais chiffré) ──
 async function lireUtilisateursPublic() {
+  // 1) copie publiée avec le site (fonctionne aussi quand le dépôt est privé)
+  // 2) API GitHub (version la plus fraîche, seulement si le dépôt est public)
   const urls = [
-    `https://api.github.com/repos/${CONF.owner}/${CONF.repo}/contents/${USERS_FILE}?ref=${CONF.branch}`,
-    `${USERS_FILE}?t=${Date.now()}`
+    `${USERS_FILE}?t=${Date.now()}`,
+    `https://api.github.com/repos/${CONF.owner}/${CONF.repo}/contents/${USERS_FILE}?ref=${CONF.branch}`
   ];
+  let introuvable = 0;
   for (const u of urls) {
     try {
       const r = await fetch(u, { cache: "no-store", headers: u.startsWith("https://api") ? { "Accept": "application/vnd.github.raw+json" } : {} });
-      if (r.status === 404) return { users: [] };
-      if (r.ok) return await r.json();
+      if (r.ok) { const d = await r.json(); if (d && Array.isArray(d.users)) return d; }
+      if (r.status === 404) introuvable++;
     } catch (e) {}
   }
+  if (introuvable === urls.length) return { users: [] };
   throw new Error("Impossible de charger la liste des comptes. Vérifie ta connexion.");
 }
 async function lireUtilisateurs() {   // version authentifiée, toujours à jour
@@ -934,7 +938,7 @@ $("#mdp-form").addEventListener("submit", async e => {
     Object.assign(u, await chiffrer(TOKEN, u.id, m1));
     await ecrireUtilisateurs(data, `🔑 Changement de mot de passe (${u.id})`);
     $("#mdp1").value = ""; $("#mdp2").value = "";
-    msg.className = "msg ok"; msg.textContent = "Mot de passe changé ✓ Utilise-le à ta prochaine connexion.";
+    msg.className = "msg ok"; msg.textContent = "Mot de passe changé ✓ Il fonctionnera dans 1 à 2 minutes, le temps que le site se mette à jour.";
   } catch (err) { msg.className = "msg err"; msg.textContent = messageErreur(err); }
   $("#mdp-btn").disabled = false;
 });
@@ -1019,7 +1023,7 @@ function majListe() {
     const ext = (s.nom.split(".").pop() || "").toUpperCase();
     const trop = s.file.size > TAILLE_MAX;
     const existe = dossier && ARBRE.some(x => x.path === `${dossier}/${s.nom}`);
-    const info = trop ? `<small class="warn">Trop lourd (max 95 Mo)</small>`
+    const info = trop ? `<small class="warn">Trop lourd (max 25 Mo) — compresse-le d\u2019abord</small>`
                : existe ? `<small class="warn">${taille(s.file.size)} · remplacera le fichier existant</small>`
                : `<small>${taille(s.file.size)}</small>`;
     return `<div class="file">
