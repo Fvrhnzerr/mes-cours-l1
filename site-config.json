@@ -1,10 +1,10 @@
 {
-  "maintenance": true,
+  "maintenance": false,
   "message": "ccna 1.6.2 a faire",
   "nouveau_jours": 14,
   "signature": "",
   "mot_de_passe": {
-    "actif": false,
+    "actif": true,
     "login": "fafa",
     "mdp": "fafa"
   },
