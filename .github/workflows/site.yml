@@ -116,7 +116,7 @@ jobs:
 
       - name: Publier sur Cloudflare Pages
         run: |
-          [ "${{ steps.base.outputs.ok }}" = "oui" ] || { echo "::warning::Base de données non configurée : vérifie que le jeton Cloudflare a la permission D1 Edit."; rm -f wrangler.toml; }
+          [ "${{ steps.base.outputs.ok }}" = "oui" ] || { echo "Jeton sans droit D1 : la liaison DB réglée dans le tableau de bord Cloudflare est utilisée."; rm -f wrangler.toml; }
           npx wrangler pages deploy _site --project-name="$CF_PROJET" --branch=main --commit-dirty=true
 
   github-pages:
