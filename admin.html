@@ -177,6 +177,9 @@ details.help summary { cursor:pointer; font-weight:600; color:var(--accent); fon
 details.help ol { padding-left:20px; margin:10px 0 0; font-size:.9rem; }
 details.help li { margin-bottom:6px; }
 .note { font-size:.85rem; color:var(--ink-soft); margin-top:14px; }
+.tabs a.actif { background:var(--accent); color:var(--accent-ink); border-color:var(--accent); }
+.userrow .acts { flex-wrap:wrap; }
+.row2 .btn { width:100%; }
 </style>
 </head>
 <body>
@@ -184,42 +187,49 @@ details.help li { margin-bottom:6px; }
 <header class="masthead">
   <div class="masthead-inner">
     <div class="eyebrow">⚙️ Espace administrateur</div>
-    <h1 class="title">Ajouter des cours</h1>
+    <h1 class="title" id="titre">Drive Universitaire</h1>
     <div class="who" id="who"><span id="who-txt"></span><button id="logout">Se déconnecter</button></div>
   </div>
 </header>
 <nav class="tabs hidden" id="tabs"><div class="tabs-inner">
-  <a href="#ecran-ajout">📤 Ajouter</a>
-  <a href="#ecran-gestion">📄 Documents</a>
-  <a href="#ecran-users" data-admin>👥 Utilisateurs</a>
-  <a href="#ecran-reglages" data-admin>⚙️ Réglages</a>
-  <a href="#ecran-matieres" data-admin>📚 Matières</a>
-  <a href="#ecran-mdp" data-prof>🔑 Mot de passe</a>
+  <a href="#ajout" data-ecran="ajout">📤 Ajouter</a>
+  <a href="#documents" data-ecran="documents">📄 Documents</a>
+  <a href="#utilisateurs" data-ecran="utilisateurs" data-admin>👥 Utilisateurs</a>
+  <a href="#reglages" data-ecran="reglages" data-admin>⚙️ Réglages</a>
+  <a href="#matieres" data-ecran="matieres" data-admin>📚 Matières</a>
+  <a href="#sauvegardes" data-ecran="sauvegardes" data-admin>💾 Sauvegardes</a>
+  <a href="#journal" data-ecran="journal" data-admin>🕘 Journal</a>
+  <a href="#mdp" data-ecran="mdp">🔑 Mot de passe</a>
 </div></nav>
 
 <main>
-  <!-- ── Connexion ── -->
-  <section class="card" id="ecran-login">
-    <h2>Connexion</h2>
-    <p class="lead">Connecte-toi avec l'identifiant et le mot de passe que tu as reçus.</p>
-    <form id="login-form">
-      <label class="f" for="user">Identifiant</label>
-      <input class="input" id="user" autocomplete="username" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="ex : hassan">
-      <label class="f" for="pass">Mot de passe</label>
-      <input class="input" type="password" id="pass" autocomplete="current-password">
-      <label class="check"><input type="checkbox" id="remember" checked> Rester connecté sur cet appareil</label>
-      <button class="btn wide" type="submit" id="login-btn">Se connecter</button>
+  <!-- ── Chargement / base indisponible ── -->
+  <section class="card" id="ecran-attente">
+    <h2>Chargement…</h2>
+    <p class="lead" id="attente-txt">Connexion à la base de données.</p>
+  </section>
+
+  <!-- ── Installation (première fois) ── -->
+  <section class="card hidden" id="ecran-installation">
+    <h2>Bienvenue 👋 Installation du site</h2>
+    <p class="lead">La base de données est prête. Crée ton compte de propriétaire. On te demande une seule fois un jeton GitHub : il prouve que le site t'appartient et permet d'y ranger les fichiers des cours. Il reste caché sur le serveur.</p>
+    <form id="install-form">
+      <label class="f" for="in-nom">Ton nom (affiché)</label>
+      <input class="input" id="in-nom" placeholder="ex : Farhan" autocomplete="name">
+      <label class="f" for="in-id">Identifiant</label>
+      <input class="input" id="in-id" placeholder="ex : farhan" autocomplete="username" autocapitalize="off" spellcheck="false">
+      <label class="f" for="in-mdp">Mot de passe (8 caractères minimum)</label>
+      <input class="input" type="password" id="in-mdp" autocomplete="new-password">
+      <label class="f" for="in-token">Jeton GitHub</label>
+      <input class="input" type="password" id="in-token" placeholder="github_pat_…" autocomplete="off" autocapitalize="off" spellcheck="false">
+      <button class="btn wide" type="submit" id="in-btn">Installer et me connecter</button>
     </form>
-    <div class="msg" id="login-msg"></div>
+    <div class="msg" id="msg-install"></div>
     <details class="help">
-      <summary>Connexion du propriétaire (jeton GitHub)</summary>
-      <form id="token-form">
-        <label class="f" for="token">Jeton GitHub</label>
-        <input class="input" type="password" id="token" placeholder="github_pat_…" autocomplete="off" autocapitalize="off" spellcheck="false">
-        <button class="btn wide ghost" type="submit" id="token-btn">Se connecter avec le jeton</button>
-      </form>
-      <ol style="margin-top:16px">
+      <summary>Comment obtenir un jeton GitHub ?</summary>
+      <ol>
         <li>Sur GitHub : ta photo de profil → <b>Settings</b> → <b>Developer settings</b> → <b>Personal access tokens</b> → <b>Fine-grained tokens</b> → <b>Generate new token</b>.</li>
+        <li><b>Expiration</b> : choisis la plus longue possible (ou « No expiration »).</li>
         <li><b>Repository access</b> : « Only select repositories » → <b>mes-cours-l1</b>.</li>
         <li><b>Permissions</b> : <b>Contents</b> = « Read and write », et <b>Actions</b> = « Read-only ».</li>
         <li>Clique sur <b>Generate token</b>, copie-le et colle-le ci-dessus.</li>
@@ -227,64 +237,61 @@ details.help li { margin-bottom:6px; }
     </details>
   </section>
 
-  <!-- ── Ajout ── -->
-  <section class="card hidden" id="ecran-ajout">
-    <h2>Nouveaux documents</h2>
-    <p class="lead">Choisis où ranger les fichiers, puis dépose-les.</p>
-    <div class="mes-mat hidden" id="mes-mat"></div>
+  <!-- ── Connexion ── -->
+  <section class="card hidden" id="ecran-connexion">
+    <h2>Connexion</h2>
+    <p class="lead">Connecte-toi avec l'identifiant et le mot de passe que tu as reçus.</p>
+    <form id="login-form">
+      <label class="f" for="user">Identifiant</label>
+      <input class="input" id="user" autocomplete="username" autocapitalize="off" autocorrect="off" spellcheck="false" placeholder="ex : hassan">
+      <label class="f" for="pass">Mot de passe</label>
+      <input class="input" type="password" id="pass" autocomplete="current-password">
+      <label class="check"><input type="checkbox" id="remember" checked> Rester connecté sur cet appareil (30 jours)</label>
+      <button class="btn wide" type="submit" id="login-btn">Se connecter</button>
+    </form>
+    <div class="msg" id="login-msg"></div>
+  </section>
 
+  <!-- ── Ajout ── -->
+  <section class="card hidden ecran" id="ecran-ajout">
+    <h2>Nouveaux documents</h2>
+    <p class="lead">Choisis où ranger les fichiers, puis dépose-les. Ils sont visibles sur le site tout de suite.</p>
+    <div class="mes-mat hidden" id="mes-mat"></div>
     <label class="f">Année</label>
     <div class="pills" id="p-annee"></div>
-
     <label class="f">Filière</label>
     <div class="pills" id="p-filiere"></div>
-
     <label class="f" for="matiere">Matière</label>
     <select class="input" id="matiere"></select>
     <input class="input hidden" id="matiere-new" placeholder="Nom de la nouvelle matière (ex : Base de données)" style="margin-top:8px">
-
     <label class="f">Type</label>
     <div class="pills" id="p-type"></div>
-
     <label class="f">Fichiers</label>
     <label class="drop" id="drop">
       <b>Choisir des fichiers</b>
-      <span>ou glisse-les ici · PDF, Word, PowerPoint, photos…</span>
+      <span>ou glisse-les ici · PDF, Word, PowerPoint, photos… (25 Mo max par fichier)</span>
       <input type="file" id="fichiers" multiple>
     </label>
     <div class="files" id="liste"></div>
-
     <div class="dest" id="dest"></div>
     <button class="btn wide" id="publier" disabled>Publier</button>
     <div class="msg" id="msg"></div>
   </section>
 
-  <!-- ── Gestion ── -->
-  <section class="card hidden" id="ecran-gestion">
+  <!-- ── Documents ── -->
+  <section class="card hidden ecran" id="ecran-documents">
     <h2 id="gestion-titre">Documents de la matière</h2>
-    <p class="lead">Ce qui est déjà en ligne pour la matière choisie ci-dessus.</p>
+    <p class="lead">Ce qui est en ligne pour la matière choisie dans « Ajouter ».</p>
     <div id="docs"></div>
     <div class="msg" id="msg-gestion"></div>
   </section>
 
-  <!-- ── Utilisateurs (administrateurs) ── -->
-  <section class="card hidden" id="ecran-users">
+  <!-- ── Utilisateurs ── -->
+  <section class="card hidden ecran" id="ecran-utilisateurs">
     <h2>Utilisateurs</h2>
-    <p class="lead">Crée un compte pour chaque professeur, puis envoie-lui son identifiant et son mot de passe.</p>
+    <p class="lead">Crée un compte pour chaque professeur, puis envoie-lui son identifiant et son mot de passe. Un compte marqué « sans mot de passe » vient de l'ancienne version : clique sur « Nouveau mot de passe » pour l'activer.</p>
     <div class="doclist" id="users"></div>
     <div class="msg" id="msg-users"></div>
-
-    <h3 class="sub">Créer plusieurs comptes d'un coup</h3>
-    <p class="hint">Une ligne par prof : <code>Nom ; Matière</code>. Le même nom sur deux lignes donne un seul compte avec deux matières. Supprime une ligne pour ne pas créer ce compte.</p>
-    <label class="f">Année</label>
-    <div class="pills" id="p-imp-annee"></div>
-    <label class="f">Filière</label>
-    <div class="pills" id="p-imp-filiere"></div>
-    <label class="f" for="imp-txt">Professeurs</label>
-    <textarea class="input" id="imp-txt" rows="9" spellcheck="false"></textarea>
-    <div class="apercu" id="imp-apercu"></div>
-    <button class="btn wide" id="imp-btn">Créer les comptes</button>
-    <div class="msg" id="msg-imp"></div>
 
     <h3 class="sub">Nouveau compte</h3>
     <form id="user-form">
@@ -296,14 +303,25 @@ details.help li { margin-bottom:6px; }
       <div class="pills" id="p-role"></div>
       <button class="btn wide" type="submit" id="nu-btn">Créer le compte</button>
     </form>
-    <div class="note-box">Un <b>professeur</b> peut ajouter et supprimer des cours. Un <b>administrateur</b> peut en plus gérer les comptes.
-      Pour bloquer complètement quelqu'un : supprime son compte, crée un nouveau jeton sur GitHub et supprime l'ancien, connecte-toi avec le nouveau jeton, puis clique sur « Nouveau mot de passe » pour chaque compte restant.</div>
+
+    <h3 class="sub">Créer plusieurs comptes d'un coup</h3>
+    <p class="hint">Une ligne par prof : <code>Nom ; Matière</code>. Le même nom sur deux lignes donne un seul compte avec deux matières.</p>
+    <label class="f">Année</label>
+    <div class="pills" id="p-imp-annee"></div>
+    <label class="f">Filière</label>
+    <div class="pills" id="p-imp-filiere"></div>
+    <label class="f" for="imp-txt">Professeurs</label>
+    <textarea class="input" id="imp-txt" rows="7" spellcheck="false" placeholder="Mr. Mohamed Houssein ; Technologie réseaux mobile&#10;Mme Soumeya Bode ; Anglais Technique"></textarea>
+    <div class="apercu" id="imp-apercu"></div>
+    <button class="btn wide" id="imp-btn" disabled>Créer les comptes</button>
+    <div class="msg" id="msg-imp"></div>
+    <div class="note-box">Un <b>professeur</b> peut ajouter et supprimer des cours. Un <b>administrateur</b> peut en plus gérer les comptes, les réglages et les sauvegardes. Supprimer un compte le déconnecte immédiatement.</div>
   </section>
 
-  <!-- ── Réglages du site (administrateurs) ── -->
-  <section class="card hidden" id="ecran-reglages">
+  <!-- ── Réglages ── -->
+  <section class="card hidden ecran" id="ecran-reglages">
     <h2>Réglages du site</h2>
-    <p class="lead">Les changements sont en ligne 1 à 2 minutes après « Enregistrer ».</p>
+    <p class="lead">Les changements sont en ligne immédiatement après « Enregistrer ».</p>
     <div class="etat on" id="etat-site">Chargement…</div>
     <form id="reglages-form">
       <div class="switch-row">
@@ -337,18 +355,61 @@ details.help li { margin-bottom:6px; }
       <button class="btn wide" type="submit" id="r-btn">Enregistrer les réglages</button>
     </form>
     <div class="msg" id="msg-reglages"></div>
+
+    <h3 class="sub">🔗 Liaison avec GitHub</h3>
+    <p class="hint" id="gh-etat">—</p>
+    <form id="gh-form">
+      <label class="f" for="gh-token">Nouveau jeton GitHub (si l'ancien a expiré)</label>
+      <input class="input" type="password" id="gh-token" placeholder="github_pat_…" autocomplete="off" autocapitalize="off" spellcheck="false">
+      <button class="btn wide ghost" type="submit" id="gh-btn">Enregistrer le jeton</button>
+    </form>
+    <div class="msg" id="msg-gh"></div>
   </section>
 
-  <!-- ── Matières (administrateurs) ── -->
-  <section class="card hidden" id="ecran-matieres">
+  <!-- ── Matières ── -->
+  <section class="card hidden ecran" id="ecran-matieres">
     <h2>Matières</h2>
     <p class="lead">Clique sur un nom pour changer comment il s'affiche sur le site. Le dossier ne change pas.</p>
     <div id="matieres-admin"></div>
     <div class="msg" id="msg-matieres"></div>
   </section>
 
+  <!-- ── Sauvegardes ── -->
+  <section class="card hidden ecran" id="ecran-sauvegardes">
+    <h2>Sauvegardes</h2>
+    <p class="lead">Une sauvegarde contient les comptes, les réglages, la liste des documents et le journal. Les fichiers des cours, eux, sont gardés avec tout leur historique sur GitHub.</p>
+    <div class="etat on" id="sv-etat">Chargement…</div>
+    <label class="f" for="sv-note">Note (facultatif)</label>
+    <input class="input" id="sv-note" placeholder="ex : Avant la rentrée du S4">
+    <div class="row2" style="margin-top:14px">
+      <button class="btn" id="sv-creer">💾 Sauvegarder maintenant</button>
+      <a class="btn ghost" id="sv-export" href="/api/export">⬇️ Télécharger les données</a>
+    </div>
+    <div class="msg" id="msg-sv"></div>
+
+    <h3 class="sub">Historique</h3>
+    <p class="hint">Une sauvegarde automatique est faite chaque jour où un administrateur se connecte (les 30 dernières sont gardées). Les sauvegardes manuelles restent jusqu'à ce que tu les supprimes. Avant chaque restauration, l'état actuel est sauvegardé automatiquement.</p>
+    <div class="doclist" id="sv-liste" style="margin-top:12px"></div>
+
+    <h3 class="sub">Restaurer depuis un fichier</h3>
+    <p class="hint">Choisis un fichier <code>.json</code> téléchargé avec « Télécharger ».</p>
+    <label class="drop" id="sv-drop" style="margin-top:12px">
+      <b>Choisir un fichier de sauvegarde</b>
+      <span>drive-universitaire-….json</span>
+      <input type="file" id="sv-fichier" accept=".json,application/json">
+    </label>
+    <div class="msg" id="msg-sv-fichier"></div>
+  </section>
+
+  <!-- ── Journal ── -->
+  <section class="card hidden ecran" id="ecran-journal">
+    <h2>Journal</h2>
+    <p class="lead">Les 200 dernières actions faites dans l'espace administrateur.</p>
+    <div class="doclist" id="journal"></div>
+  </section>
+
   <!-- ── Mon mot de passe ── -->
-  <section class="card hidden" id="ecran-mdp">
+  <section class="card hidden ecran" id="ecran-mdp">
     <h2>Mon mot de passe</h2>
     <p class="lead">Choisis un mot de passe personnel (8 caractères minimum).</p>
     <form id="mdp-form">
@@ -361,95 +422,241 @@ details.help li { margin-bottom:6px; }
     </form>
     <div class="msg" id="msg-mdp"></div>
   </section>
+
+  <p class="note" style="text-align:center"><a href="./">← Voir le site</a></p>
 </main>
 
 <script>
-// ── Réglages ──
-const CONF = (() => {
-  let owner = "Fvrhnzerr", repo = "mes-cours-l1";
-  if (location.hostname.endsWith(".github.io")) {
-    owner = location.hostname.split(".")[0];
-    const seg = location.pathname.split("/").filter(Boolean)[0];
-    if (seg && !seg.includes(".")) repo = seg;
-  }
-  return { owner, repo, branch: "main" };
-})();
 const ANNEES = ["L1", "L2", "L3"];
 const FILIERES = { GI: "Génie Informatique", MRT: "Maintenance Réseau Télécom", GE: "Gestion des Entreprises" };
 const TYPES = [["Cours", "Cours"], ["TD", "TD"], ["TP", "TP"], ["Sujets", "Sujets / examens"]];
-const TAILLE_MAX = 25 * 1024 * 1024;   // limite Cloudflare Pages : 25 Mo par fichier
-const TOKEN_KEY = "drive-admin-token";        // ancienne version (jeton seul)
-const SESSION_KEY = "drive-admin-session";
-const USERS_FILE = "admin-users.json";
-const ITERATIONS = 600000;
-// Emploi du temps L2 MRT — S3 2026-2027 (modifiable dans la page avant création)
-const IMPORT_DEFAUT = `Mr. Mohamed Houssein ; Technologie réseaux mobile
-Mme Soumeya Bode ; Anglais Technique
-Mr. Elmi Ahmed ; CCNA Module 2
-Mr. Ibrahim Med ; Téléphonie sur IP et service
-Mr. Issa Darsa ; TEC III
-Mr. Mohamed Ahmed ; Initiation au Python
-Mr. Mohamed Ibrahim ; Introduction à Linux
-Mr. Mahad Osman ; Administration des services réseaux (Windows)`;
+const TAILLE_MAX = 25 * 1024 * 1024;
 
 const $ = s => document.querySelector(s);
-const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]));
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]));
 const norm = s => String(s).normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().trim();
+const normId = s => norm(s).replace(/[^a-z0-9._-]/g, "");
 const taille = b => b < 1048576 ? Math.max(1, Math.round(b / 1024)) + " Ko" : (b / 1048576).toFixed(1).replace(".", ",") + " Mo";
 const propre = s => String(s).normalize("NFC").replace(/[\/\\]/g, "-").replace(/\s+/g, " ").trim();
+const quand = ms => new Date(ms).toLocaleString("fr-FR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" }).replace(" ", " à ");
+const val = nom => (document.querySelector(`input[name="${nom}"]:checked`) || {}).value;
+function message(sel, type, texte) { const m = $(sel); m.className = "msg" + (type ? " " + type : ""); m.textContent = texte; return m; }
 
-let TOKEN = "";
-let USERS_CACHE = [];
-let SESSION = null;    // {token, id, nom, role} — id vide = propriétaire (jeton)
-let ARBRE = [];        // [{path, sha, size}] des fichiers sous cours/
-let SELECTION = [];    // [{file, nom}]
+let MOI = null;       // {id, nom, role, matieres, github}
+let DOCS = [];        // [{path, filiere, annee, matiere, titre_defaut, n, e, t, s, d}]
+let NOMS = {};        // noms affichés des matières
+let SELECTION = [];
+let USERS = [];
+const estAdmin = () => MOI && MOI.role === "admin";
 
-// ── API GitHub ──
-async function gh(chemin, opts = {}) {
-  const r = await fetch(`https://api.github.com/repos/${CONF.owner}/${CONF.repo}${chemin}`, {
-    ...opts,
-    headers: {
-      "Authorization": "Bearer " + TOKEN,
-      "Accept": "application/vnd.github+json",
-      "X-GitHub-Api-Version": "2022-11-28",
-      ...(opts.body ? { "Content-Type": "application/json" } : {})
-    }
-  });
+// ── API ──
+async function api(chemin, opts = {}) {
+  const init = { method: opts.method || "GET", headers: { "X-Drive": "1" }, credentials: "same-origin" };
+  if (opts.json !== undefined) { init.method = opts.method || "POST"; init.headers["Content-Type"] = "application/json"; init.body = JSON.stringify(opts.json); }
+  if (opts.brut !== undefined) { init.method = "POST"; init.headers["Content-Type"] = "application/json"; init.body = opts.brut; }
+  let r;
+  try { r = await fetch("/api" + chemin, init); }
+  catch (e) { throw new Error("Pas de connexion internet ?"); }
+  let d = {};
+  try { d = await r.json(); } catch (e) {}
   if (!r.ok) {
-    let m = ""; try { m = (await r.json()).message || ""; } catch (e) {}
-    const err = new Error(m || ("Erreur " + r.status)); err.status = r.status; throw err;
+    const err = new Error(d.erreur || "Erreur " + r.status); err.status = r.status;
+    if (r.status === 401 && MOI) { MOI = null; montrer("connexion"); message("#login-msg", "err", "Ta session a expiré. Reconnecte-toi."); }
+    throw err;
   }
-  return r.status === 204 ? null : r.json();
+  return d;
 }
 
-function messageErreur(e) {
-  if (e.status === 401) return SESSION && SESSION.id ? "Ton accès n'est plus valide. Contacte l'administrateur du site." : "Jeton invalide ou expiré. Reconnecte-toi avec un nouveau jeton.";
-  if (e.status === 403) return "Ce jeton n'a pas la permission d'écrire dans le dépôt (Contents : Read and write).";
-  if (e.status === 404) return "Dépôt introuvable avec ce jeton. Vérifie qu'il donne accès à " + CONF.repo + ".";
-  if (e.status === 409 || e.status === 422) return "Le dépôt a changé pendant l'envoi. Réessaie.";
-  if (e instanceof TypeError) return "Pas de connexion internet ?";
-  return e.message;
+// ── Écrans ──
+const ECRANS = ["attente", "installation", "connexion"];
+function montrer(nom) {
+  ECRANS.forEach(e => $("#ecran-" + e).classList.toggle("hidden", e !== nom));
+  document.querySelectorAll(".ecran").forEach(s => s.classList.add("hidden"));
+  $("#tabs").classList.add("hidden"); $("#who").classList.remove("on");
 }
 
-// Un seul commit pour tous les fichiers (ajout : sha du blob / suppression : sha null)
-async function commit(entrees, message) {
-  const ref = await gh(`/git/ref/heads/${CONF.branch}`);
-  const base = await gh(`/git/commits/${ref.object.sha}`);
-  const arbre = await gh("/git/trees", { method: "POST", body: JSON.stringify({
-    base_tree: base.tree.sha,
-    tree: entrees.map(e => ({ path: e.path, mode: "100644", type: "blob", sha: e.sha }))
-  }) });
-  const corps = { message: message + (SESSION && SESSION.nom ? ` — par ${SESSION.nom}` : ""), tree: arbre.sha, parents: [ref.object.sha] };
-  if (SESSION && SESSION.id) corps.author = { name: SESSION.nom || SESSION.id, email: `${SESSION.id}@drive-universitaire.local`, date: new Date().toISOString() };
-  const c = await gh("/git/commits", { method: "POST", body: JSON.stringify(corps) });
-  await gh(`/git/refs/heads/${CONF.branch}`, { method: "PATCH", body: JSON.stringify({ sha: c.sha }) });
+function ouvrirOnglet(nom) {
+  if (!MOI) return;
+  const lien = document.querySelector(`#tabs a[data-ecran="${nom}"]`);
+  if (!lien || lien.classList.contains("hidden")) nom = "ajout";
+  const groupe = nom === "ajout" || nom === "documents" ? ["ajout", "documents"] : [nom];
+  document.querySelectorAll(".ecran").forEach(s => s.classList.toggle("hidden", !groupe.includes(s.id.replace("ecran-", ""))));
+  document.querySelectorAll("#tabs a").forEach(a => a.classList.toggle("actif", a.dataset.ecran === nom));
+  if (nom === "documents") $("#ecran-documents").scrollIntoView({ behavior: "smooth" });
+  if (nom === "utilisateurs") afficherUtilisateurs();
+  if (nom === "reglages") chargerReglages();
+  if (nom === "matieres") afficherMatieresAdmin();
+  if (nom === "sauvegardes") chargerSauvegardes();
+  if (nom === "journal") chargerJournal();
+  if (nom === "documents") majGestion();
+}
+window.addEventListener("hashchange", () => ouvrirOnglet(location.hash.slice(1) || "ajout"));
+
+async function demarrer() {
+  let etat;
+  try { etat = await api("/etat"); }
+  catch (e) {
+    $("#ecran-attente h2").textContent = e.status === 503 ? "Base de données pas encore branchée" : "Impossible de joindre le serveur";
+    $("#attente-txt").innerHTML = esc(e.message) + ` <br><br>En attendant, l'ancienne page d'administration reste utilisable : <a href="admin-ancien.html">ouvrir l'ancienne version</a>.`;
+    return;
+  }
+  if (!etat.installe) return montrer("installation");
+  try { MOI = await api("/moi"); }
+  catch (e) { return montrer("connexion"); }
+  await entrer();
 }
 
-async function chargerArbre() {
-  const t = await gh(`/git/trees/${CONF.branch}?recursive=1`);
-  ARBRE = t.tree.filter(x => x.type === "blob" && x.path.startsWith("cours/") && !x.path.split("/").pop().startsWith("."))
-               .map(x => ({ path: x.path.normalize("NFC"), sha: x.sha, size: x.size }));
+async function entrer() {
+  ECRANS.forEach(e => $("#ecran-" + e).classList.add("hidden"));
+  $("#who-txt").textContent = `Connecté · ${MOI.nom} · ${estAdmin() ? "Administrateur" : "Professeur"}`;
+  $("#who").classList.add("on");
+  $("#tabs").classList.remove("hidden");
+  document.querySelectorAll("#tabs [data-admin]").forEach(a => a.classList.toggle("hidden", !estAdmin()));
+  $("#mdp-user").value = MOI.id;
+  $("#titre").textContent = estAdmin() ? "Administration" : "Ajouter des cours";
+  await chargerDocuments();
+  majMatieres(); afficherMesMatieres();
+  ouvrirOnglet(location.hash.slice(1) || "ajout");
+  if (estAdmin() && !MOI.github) message("#msg", "err", "⚠️ Le site n'est pas relié à GitHub : l'ajout de fichiers ne marchera pas. Va dans Réglages → Liaison avec GitHub.");
 }
+
+// ── Installation ──
+$("#in-nom").addEventListener("input", () => { if (!$("#in-id").dataset.touche) $("#in-id").value = normId($("#in-nom").value.split(/\s+/)[0] || ""); });
+$("#in-id").addEventListener("input", () => { $("#in-id").dataset.touche = "1"; });
+$("#install-form").addEventListener("submit", async e => {
+  e.preventDefault();
+  $("#in-btn").disabled = true; message("#msg-install", "", "Vérification du jeton GitHub…");
+  try {
+    await api("/installer", { json: { nom: $("#in-nom").value, id: $("#in-id").value, mdp: $("#in-mdp").value, token: $("#in-token").value } });
+    $("#in-token").value = ""; $("#in-mdp").value = "";
+    MOI = await api("/moi"); await entrer();
+  } catch (err) { message("#msg-install", "err", err.message); }
+  $("#in-btn").disabled = false;
+});
+
+// ── Connexion ──
+$("#login-form").addEventListener("submit", async e => {
+  e.preventDefault();
+  const id = normId($("#user").value), mdp = $("#pass").value;
+  if (!id || !mdp) return message("#login-msg", "err", "Indique ton identifiant et ton mot de passe.");
+  $("#login-btn").disabled = true; message("#login-msg", "", "Vérification…");
+  try {
+    await api("/connexion", { json: { id, mdp, memoriser: $("#remember").checked } });
+    $("#pass").value = ""; $("#login-msg").textContent = ""; $("#login-msg").className = "msg";
+    MOI = await api("/moi"); await entrer();
+  } catch (err) { message("#login-msg", "err", err.message); }
+  $("#login-btn").disabled = false;
+});
+$("#logout").addEventListener("click", async () => { try { await api("/deconnexion", { json: {} }); } catch (e) {} location.hash = ""; location.reload(); });
+
+// ── Documents ──
+async function chargerDocuments() {
+  const d = await api("/documents");
+  DOCS = d.documents; NOMS = (d.site && d.site.noms_matieres) || {};
+}
+
+function pills(id, nom, options, defaut) {
+  $(id).innerHTML = options.map(([v, label]) =>
+    `<input type="radio" name="${nom}" id="${nom}-${esc(v)}" value="${esc(v)}" ${v === defaut ? "checked" : ""}><label for="${nom}-${esc(v)}">${esc(label)}</label>`).join("");
+}
+pills("#p-annee", "annee", ANNEES.map(a => [a, a]), "L2");
+pills("#p-filiere", "filiere", Object.keys(FILIERES).map(f => [f, f]), "GI");
+pills("#p-type", "type", TYPES, "Cours");
+pills("#p-role", "role", [["prof", "Professeur"], ["admin", "Administrateur"]], "prof");
+pills("#p-imp-annee", "imp-annee", ANNEES.map(a => [a, a]), "L2");
+pills("#p-imp-filiere", "imp-filiere", Object.keys(FILIERES).map(f => [f, f]), "MRT");
+
+function matieresExistantes(a, f) {
+  return [...new Set(DOCS.filter(x => x.annee === a && x.filiere === f).map(x => x.matiere))].sort((x, y) => x.localeCompare(y, "fr"));
+}
+const nomAffiche = (f, a, m) => NOMS[`${f}/${a}/${m}`] || (DOCS.find(x => x.filiere === f && x.annee === a && x.matiere === m) || {}).titre_defaut || m;
+
+function majMatieres() {
+  const a = val("annee"), f = val("filiere"), ms = matieresExistantes(a, f), avant = $("#matiere").value;
+  $("#matiere").innerHTML = ms.map(m => `<option value="${esc(m)}">${esc(nomAffiche(f, a, m))}${nomAffiche(f, a, m) !== m ? " (" + esc(m) + ")" : ""}</option>`).join("") + `<option value="__new">+ Nouvelle matière…</option>`;
+  $("#matiere").value = ms.includes(avant) ? avant : (ms[0] || "__new");
+  majNouvelle();
+}
+function majNouvelle() {
+  $("#matiere-new").classList.toggle("hidden", $("#matiere").value !== "__new");
+  majDestination(); majGestion();
+}
+const matiereChoisie = () => $("#matiere").value === "__new" ? propre($("#matiere-new").value) : $("#matiere").value;
+
+// Réutilise le dossier de type existant (ex : « Td » plutôt que de créer « TD » à côté)
+function dossierType() {
+  const t = val("type"), a = val("annee"), f = val("filiere"), m = matiereChoisie();
+  const existants = new Set();
+  DOCS.forEach(x => { if (x.filiere === f && x.annee === a && x.matiere === m) { const p = x.path.split("/"); if (p.length > 5) existants.add(p[4]); } });
+  for (const d of existants) if (norm(d) === norm(t) || (t === "Sujets" && norm(d).startsWith("sujet"))) return d;
+  return t;
+}
+const cheminDossier = () => matiereChoisie() ? `cours/${val("filiere")}/${val("annee")}/${matiereChoisie()}/${dossierType()}` : "";
+function majDestination() {
+  const d = cheminDossier();
+  $("#dest").innerHTML = d ? `Destination : <code>${esc(d)}/</code>` : `<span style="color:var(--accent)">Indique le nom de la matière.</span>`;
+  majListe();
+}
+["#p-annee", "#p-filiere"].forEach(id => $(id).addEventListener("change", majMatieres));
+$("#p-type").addEventListener("change", majDestination);
+$("#matiere").addEventListener("change", majNouvelle);
+$("#matiere-new").addEventListener("input", () => { majDestination(); majGestion(); });
+
+function choisirMatiere(m) {
+  const ra = document.getElementById("annee-" + m.annee), rf = document.getElementById("filiere-" + m.filiere);
+  if (ra) ra.checked = true;
+  if (rf) rf.checked = true;
+  majMatieres();
+  const trouve = [...$("#matiere").options].map(o => o.value).find(o => o !== "__new" && (norm(o) === norm(m.matiere) || norm(nomAffiche(m.filiere, m.annee, o)) === norm(m.matiere)));
+  if (trouve) { $("#matiere").value = trouve; $("#matiere-new").value = ""; }
+  else { $("#matiere").value = "__new"; $("#matiere-new").value = m.matiere; }
+  majNouvelle();
+}
+function afficherMesMatieres() {
+  const ms = (MOI && MOI.matieres) || [];
+  $("#mes-mat").classList.toggle("hidden", !ms.length);
+  if (!ms.length) return;
+  $("#mes-mat").innerHTML = (ms.length > 1 ? "Tes matières :" : "Ta matière :") + ms.map((m, i) => ` <button type="button" data-mamat="${i}">${esc(m.matiere)} · ${esc(m.annee)} ${esc(m.filiere)}</button>`).join("");
+  choisirMatiere(ms[0]);
+}
+$("#mes-mat").addEventListener("click", e => { const b = e.target.closest("[data-mamat]"); if (b) choisirMatiere(MOI.matieres[+b.dataset.mamat]); });
+
+// ── Fichiers à envoyer ──
+function ajouterFichiers(liste) {
+  for (const file of liste) if (!SELECTION.some(s => s.file === file)) SELECTION.push({ file, nom: propre(file.name) });
+  majListe();
+}
+$("#fichiers").addEventListener("change", e => { ajouterFichiers(e.target.files); e.target.value = ""; });
+const drop = $("#drop");
+["dragenter", "dragover"].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add("over"); }));
+["dragleave", "drop"].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove("over"); }));
+drop.addEventListener("drop", e => ajouterFichiers(e.dataTransfer.files));
+
+function majListe() {
+  const dossier = cheminDossier();
+  $("#liste").innerHTML = SELECTION.map((s, i) => {
+    const ext = (s.nom.split(".").pop() || "").toUpperCase();
+    const trop = s.file.size > TAILLE_MAX;
+    const existe = dossier && DOCS.some(x => x.path === `${dossier}/${s.nom}`);
+    const info = trop ? `<small class="warn">Trop lourd (max 25 Mo) — compresse-le d’abord</small>`
+               : existe ? `<small class="warn">${taille(s.file.size)} · remplacera le fichier existant</small>` : `<small>${taille(s.file.size)}</small>`;
+    return `<div class="file"><span class="ext">${esc(ext.slice(0, 4))}</span>
+      <div class="name"><input value="${esc(s.nom)}" data-i="${i}" aria-label="Nom du fichier">${info}</div>
+      <span class="state" id="st-${i}"></span>
+      <button class="x" data-del="${i}" title="Retirer" aria-label="Retirer">✕</button></div>`;
+  }).join("");
+  const valides = SELECTION.filter(s => s.file.size <= TAILLE_MAX && s.nom);
+  $("#publier").disabled = !valides.length || !dossier;
+  $("#publier").textContent = valides.length ? `Publier ${valides.length} fichier${valides.length > 1 ? "s" : ""}` : "Publier";
+}
+$("#liste").addEventListener("change", e => {
+  const i = e.target.dataset.i; if (i === undefined) return;
+  const ancien = SELECTION[i].nom, nouveau = propre(e.target.value);
+  const ext = ancien.includes(".") ? "." + ancien.split(".").pop() : "";
+  SELECTION[i].nom = !nouveau ? ancien : (ext && !nouveau.toLowerCase().endsWith(ext.toLowerCase()) ? nouveau + ext : nouveau);
+  majListe();
+});
+$("#liste").addEventListener("click", e => { const b = e.target.closest("[data-del]"); if (b) { SELECTION.splice(+b.dataset.del, 1); majListe(); } });
 
 function lireBase64(file) {
   return new Promise((ok, ko) => {
@@ -460,152 +667,68 @@ function lireBase64(file) {
   });
 }
 
-// ── Chiffrement : le jeton GitHub est chiffré avec le mot de passe de chaque utilisateur ──
-const enc = new TextEncoder(), dec = new TextDecoder();
-const b64 = buf => { let t = ""; new Uint8Array(buf).forEach(c => t += String.fromCharCode(c)); return btoa(t); };
-const unb64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
-async function deriver(mdp, sel, iterations) {
-  const base = await crypto.subtle.importKey("raw", enc.encode(mdp), "PBKDF2", false, ["deriveKey"]);
-  return crypto.subtle.deriveKey({ name: "PBKDF2", salt: sel, iterations, hash: "SHA-256" }, base, { name: "AES-GCM", length: 256 }, false, ["encrypt", "decrypt"]);
-}
-async function chiffrer(jeton, id, mdp) {
-  const sel = crypto.getRandomValues(new Uint8Array(16)), iv = crypto.getRandomValues(new Uint8Array(12));
-  const cle = await deriver(mdp, sel, ITERATIONS);
-  const ct = await crypto.subtle.encrypt({ name: "AES-GCM", iv, additionalData: enc.encode(id) }, cle, enc.encode(jeton));
-  return { sel: b64(sel), iv: b64(iv), it: ITERATIONS, ct: b64(ct) };
-}
-async function dechiffrer(u, mdp) {
-  const cle = await deriver(mdp, unb64(u.sel), u.it || ITERATIONS);
-  const pt = await crypto.subtle.decrypt({ name: "AES-GCM", iv: unb64(u.iv), additionalData: enc.encode(u.id) }, cle, unb64(u.ct));
-  return dec.decode(pt);
-}
-function genererMdp() {
-  const A = "abcdefghjkmnpqrstuvwxyz23456789", r = crypto.getRandomValues(new Uint32Array(12));
-  let m = ""; r.forEach((x, i) => { if (i && i % 4 === 0) m += "-"; m += A[x % A.length]; });
-  return m;
-}
-const normId = s => norm(s).replace(/[^a-z0-9._-]/g, "");
-
-// ── Fichier des utilisateurs (admin-users.json, public mais chiffré) ──
-async function lireUtilisateursPublic() {
-  // 1) copie publiée avec le site (fonctionne aussi quand le dépôt est privé)
-  // 2) API GitHub (version la plus fraîche, seulement si le dépôt est public)
-  const urls = [
-    `${USERS_FILE}?t=${Date.now()}`,
-    `https://api.github.com/repos/${CONF.owner}/${CONF.repo}/contents/${USERS_FILE}?ref=${CONF.branch}`
-  ];
-  let introuvable = 0;
-  for (const u of urls) {
-    try {
-      const r = await fetch(u, { cache: "no-store", headers: u.startsWith("https://api") ? { "Accept": "application/vnd.github.raw+json" } : {} });
-      if (r.ok) { const d = await r.json(); if (d && Array.isArray(d.users)) return d; }
-      if (r.status === 404) introuvable++;
-    } catch (e) {}
-  }
-  if (introuvable === urls.length) return { users: [] };
-  throw new Error("Impossible de charger la liste des comptes. Vérifie ta connexion.");
-}
-async function lireUtilisateurs() {   // version authentifiée, toujours à jour
+$("#publier").addEventListener("click", async () => {
+  const dossier = cheminDossier();
+  const aEnvoyer = SELECTION.map((s, i) => ({ ...s, i })).filter(s => s.file.size <= TAILLE_MAX && s.nom);
+  if (!dossier || !aEnvoyer.length) return;
+  const btn = $("#publier");
+  btn.disabled = true; message("#msg", "", "Envoi des fichiers…");
   try {
-    const f = await gh(`/contents/${USERS_FILE}?ref=${CONF.branch}`);
-    const txt = dec.decode(unb64(f.content.replace(/\s/g, "")));
-    return JSON.parse(txt);
-  } catch (e) { if (e.status === 404) return { version: 1, users: [] }; throw e; }
-}
-async function ecrireUtilisateurs(data, message) {
-  data.version = 1;
-  data.users.sort((x, y) => x.id.localeCompare(y.id));
-  const blob = await gh("/git/blobs", { method: "POST", body: JSON.stringify({ content: JSON.stringify(data, null, 2) + "\n", encoding: "utf-8" }) });
-  await commit([{ path: USERS_FILE, sha: blob.sha }], message);
-}
-
-// ── Session ──
-function sauverSession(memoriser) {
-  try {
-    localStorage.removeItem(TOKEN_KEY); localStorage.removeItem(SESSION_KEY); sessionStorage.removeItem(SESSION_KEY);
-    (memoriser ? localStorage : sessionStorage).setItem(SESSION_KEY, JSON.stringify(SESSION));
-  } catch (e) {}
-}
-function lireSession() {
-  try {
-    const s = localStorage.getItem(SESSION_KEY) || sessionStorage.getItem(SESSION_KEY);
-    if (s) return { session: JSON.parse(s), memo: !!localStorage.getItem(SESSION_KEY) };
-    const t = localStorage.getItem(TOKEN_KEY) || sessionStorage.getItem(TOKEN_KEY);
-    if (t) return { session: { token: t, id: "", nom: "", role: "admin" }, memo: !!localStorage.getItem(TOKEN_KEY) };
-  } catch (e) {}
-  return null;
-}
-const estAdmin = () => SESSION && (SESSION.role === "admin" || !SESSION.id);
-
-async function ouvrir(session, memoriser) {
-  SESSION = session; TOKEN = session.token;
-  const repo = await gh("");
-  if (repo.permissions && repo.permissions.push === false) { const e = new Error(); e.status = 403; throw e; }
-  if (SESSION.id) {   // le compte existe-t-il toujours ?
-    const data = await lireUtilisateurs();
-    const u = data.users.find(x => x.id === SESSION.id);
-    if (!u) { const e = new Error("Ce compte a été supprimé. Contacte l'administrateur du site."); throw e; }
-    SESSION.nom = u.nom; SESSION.role = u.role; SESSION.matieres = u.matieres || [];
-  }
-  sauverSession(memoriser);
-  await chargerArbre();
-  const qui = SESSION.id ? `${SESSION.nom} · ${SESSION.role === "admin" ? "Administrateur" : "Professeur"}` : `Propriétaire · ${CONF.owner}/${CONF.repo}`;
-  $("#who-txt").textContent = "Connecté · " + qui;
-  $("#who").classList.add("on");
-  $("#ecran-login").classList.add("hidden");
-  ["#ecran-ajout", "#ecran-gestion"].forEach(id => $(id).classList.remove("hidden"));
-  $("#ecran-mdp").classList.toggle("hidden", !SESSION.id);
-  $("#mdp-user").value = SESSION.id || "";
-  ["#ecran-users", "#ecran-reglages", "#ecran-matieres"].forEach(id => $(id).classList.toggle("hidden", !estAdmin()));
-  $("#tabs").classList.toggle("hidden", !estAdmin() && !SESSION.id);
-  document.querySelectorAll("#tabs [data-admin]").forEach(a => a.classList.toggle("hidden", !estAdmin()));
-  document.querySelectorAll("#tabs [data-prof]").forEach(a => a.classList.toggle("hidden", !SESSION.id));
-  majMatieres();
-  afficherMesMatieres();
-  if (estAdmin()) { afficherUtilisateurs(); chargerReglages(); afficherMatieresAdmin(); }
-}
-
-function deconnecter() {
-  try { [localStorage, sessionStorage].forEach(st => { st.removeItem(TOKEN_KEY); st.removeItem(SESSION_KEY); }); } catch (e) {}
-  TOKEN = ""; SESSION = null; location.reload();
-}
-
-function erreurLogin(texte) { $("#login-msg").className = "msg err"; $("#login-msg").textContent = texte; }
-
-$("#login-form").addEventListener("submit", async e => {
-  e.preventDefault();
-  const id = normId($("#user").value), mdp = $("#pass").value;
-  if (!id || !mdp) return erreurLogin("Indique ton identifiant et ton mot de passe.");
-  $("#login-btn").disabled = true; $("#login-msg").className = "msg"; $("#login-msg").textContent = "Vérification…";
-  try {
-    const data = await lireUtilisateursPublic();
-    const u = (data.users || []).find(x => x.id === id);
-    let jeton = null;
-    if (u) { try { jeton = await dechiffrer(u, mdp); } catch (err) {} }
-    if (!jeton) { await new Promise(r => setTimeout(r, 800)); throw new Error("Identifiant ou mot de passe incorrect."); }
-    await ouvrir({ token: jeton, id: u.id, nom: u.nom, role: u.role, matieres: u.matieres || [] }, $("#remember").checked);
-    $("#pass").value = ""; $("#login-msg").textContent = "";
-  } catch (err) { SESSION = null; erreurLogin(messageErreur(err)); }
-  $("#login-btn").disabled = false;
+    const fichiers = [];
+    for (const s of aEnvoyer) {
+      const st = $("#st-" + s.i); if (st) { st.className = "state"; st.textContent = "…"; }
+      const r = await api("/fichiers/blob", { brut: `{"content":"${await lireBase64(s.file)}","encoding":"base64"}` });
+      fichiers.push({ nom: s.nom, sha: r.sha, taille: s.file.size });
+      if (st) { st.className = "state ok"; st.textContent = "✓"; }
+    }
+    message("#msg", "", "Enregistrement…");
+    const a = val("annee"), f = val("filiere"), m = matiereChoisie();
+    await api("/fichiers/publier", { json: { annee: a, filiere: f, matiere: m, type: val("type"), dossier: dossierType(), fichiers } });
+    SELECTION = [];
+    await chargerDocuments();
+    majMatieres(); $("#matiere").value = m; majNouvelle(); $("#matiere-new").value = "";
+    const lien = location.origin + "/#/" + [a, f, m].map(encodeURIComponent).join("/");
+    const box = message("#msg", "ok", "");
+    box.innerHTML = `<b>Publié ✓</b> Les fichiers sont déjà visibles sur le site.
+      <div class="links"><a class="btn ghost" href="${esc(lien)}" target="_blank" rel="noopener">Voir sur le site</a></div>`;
+  } catch (err) { message("#msg", "err", err.message); majListe(); }
 });
 
-$("#token-form").addEventListener("submit", async e => {
-  e.preventDefault();
-  const jeton = $("#token").value.trim();
-  if (!jeton) return;
-  $("#token-btn").disabled = true; $("#login-msg").className = "msg"; $("#login-msg").textContent = "Vérification…";
-  try { await ouvrir({ token: jeton, id: "", nom: "", role: "admin" }, $("#remember").checked); $("#token").value = ""; $("#login-msg").textContent = ""; }
-  catch (err) { SESSION = null; erreurLogin(messageErreur(err)); }
-  $("#token-btn").disabled = false;
+// ── Gestion des documents ──
+function majGestion() {
+  const a = val("annee"), f = val("filiere"), m = matiereChoisie();
+  $("#gestion-titre").textContent = m ? `Documents · ${nomAffiche(f, a, m)} (${a} ${f})` : "Documents de la matière";
+  const docs = m ? DOCS.filter(x => x.filiere === f && x.annee === a && x.matiere === m) : [];
+  if (!docs.length) { $("#docs").innerHTML = `<div class="empty">Aucun document en ligne pour cette matière.</div>`; return; }
+  $("#docs").innerHTML = `<div class="doclist">${docs.map(x => {
+    const rel = x.path.split("/").slice(4); const nom = rel.pop();
+    return `<div class="docrow"><div class="p"><a href="/${esc(x.path.split("/").map(encodeURIComponent).join("/"))}" target="_blank" rel="noopener" style="color:inherit;text-decoration:none">${esc(nom)}</a>
+      <small>${esc(rel.join(" / ") || "—")} · ${taille(x.s || 0)}${x.par ? " · ajouté par " + esc(x.par) : ""}</small></div>
+      <button class="x" data-suppr="${esc(x.path)}" title="Supprimer" aria-label="Supprimer">🗑</button></div>`;
+  }).join("")}</div>`;
+}
+$("#docs").addEventListener("click", async e => {
+  const b = e.target.closest("[data-suppr]"); if (!b) return;
+  const chemin = b.dataset.suppr, nom = chemin.split("/").pop();
+  if (!confirm(`Supprimer « ${nom} » du site ?`)) return;
+  message("#msg-gestion", "", "Suppression…"); b.disabled = true;
+  try {
+    await api("/fichiers/supprimer", { json: { chemin } });
+    await chargerDocuments(); majGestion(); majListe();
+    message("#msg-gestion", "ok", `« ${nom} » supprimé. (GitHub garde une copie dans l'historique.)`);
+  } catch (err) { message("#msg-gestion", "err", err.message); b.disabled = false; }
 });
-$("#logout").addEventListener("click", deconnecter);
 
-// ── Gestion des comptes ──
+// ── Utilisateurs ──
 const listeMat = ms => (ms || []).map(m => `${m.matiere} (${m.annee} ${m.filiere})`).join(", ");
+function initialesNom(n) {
+  const m = String(n).replace(/^(m\.|mme|mr|dr|pr)\.?\s+/i, "").split(/\s+/).filter(Boolean);
+  return (m.length > 1 ? m[0][0] + m[1][0] : (m[0] || "?").slice(0, 2)).toUpperCase();
+}
 function texteAcces(nom, id, mdp, matieres) {
-  const lien = location.href.split("#")[0].split("?")[0];
+  const lien = location.origin + "/admin.html";
   const mat = matieres && matieres.length ? `\nMatière : ${listeMat(matieres)}` : "";
-  return `Bonjour ${nom},\n\nVoici votre accès pour déposer vos cours sur le Drive Universitaire :\n\nLien : ${lien}\nIdentifiant : ${id}\nMot de passe : ${mdp}${mat}\n\nUne fois connecté(e), vous pouvez choisir votre propre mot de passe dans la rubrique « Mon mot de passe ».`;
+  return `Bonjour ${nom},\n\nVoici votre accès pour déposer vos cours sur le Drive Universitaire :\n\nLien : ${lien}\nIdentifiant : ${id}\nMot de passe : ${mdp}${mat}\n\nUne fois connecté(e), vous pouvez choisir votre propre mot de passe dans la rubrique « Mot de passe ».`;
 }
 async function copier(texte, bouton) {
   try { await navigator.clipboard.writeText(texte); }
@@ -613,86 +736,73 @@ async function copier(texte, bouton) {
   if (bouton) { const t = bouton.textContent; bouton.textContent = "Copié ✓"; setTimeout(() => bouton.textContent = t, 2000); }
 }
 function montrerAcces(nom, id, mdp, titre, matieres) {
-  const t = texteAcces(nom, id, mdp, matieres);
-  const box = $("#msg-users");
-  box.className = "msg ok";
+  const box = message("#msg-users", "ok", "");
   box.innerHTML = `<b>${esc(titre)}</b> Envoie ce message à ${esc(nom)} (le mot de passe ne sera plus affiché) :
     <div class="cred">Identifiant : <code>${esc(id)}</code>\nMot de passe : <code>${esc(mdp)}</code></div>
     <div class="links"><button class="btn ghost" id="copier">Copier le message</button></div>`;
-  $("#copier").addEventListener("click", () => copier(t, $("#copier")));
+  $("#copier").addEventListener("click", () => copier(texteAcces(nom, id, mdp, matieres), $("#copier")));
+  box.scrollIntoView({ behavior: "smooth", block: "center" });
 }
 
 async function afficherUtilisateurs() {
   const zone = $("#users");
   zone.innerHTML = `<div class="empty" style="border:0">Chargement…</div>`;
   try {
-    const data = await lireUtilisateurs();
-    USERS_CACHE = data.users; apercuImport();
-    if (!data.users.length) { zone.innerHTML = `<div class="empty" style="border:0">Aucun compte pour l'instant.</div>`; return; }
-    zone.innerHTML = data.users.map(u => `<div class="userrow">
+    USERS = (await api("/utilisateurs")).utilisateurs;
+    apercuImport();
+    zone.innerHTML = USERS.map(u => `<div class="userrow">
       <span class="avatar">${esc(initialesNom(u.nom || u.id))}</span>
-      <div class="p"><b>${esc(u.nom || u.id)}<span class="role ${u.role === "admin" ? "admin" : ""}">${u.role === "admin" ? "Admin" : "Prof"}</span></b>
-        <small>${esc(u.id)}${u.cree ? " · créé le " + esc(u.cree) : ""}</small>${u.matieres && u.matieres.length ? `<small>${esc(listeMat(u.matieres))}</small>` : ""}</div>
-      ${u.id === (SESSION && SESSION.id) ? `<small style="color:var(--ink-soft)">Toi</small>` : `
-      <span class="acts"><button class="mini" data-reset="${esc(u.id)}">Nouveau mot de passe</button>
+      <div class="p"><b>${esc(u.nom)}<span class="role ${u.role === "admin" ? "admin" : ""}">${u.role === "admin" ? "Admin" : "Prof"}</span>${u.actif ? "" : `<span class="role" style="color:var(--warn)">sans mot de passe</span>`}</b>
+        <small>${esc(u.id)}${u.cree ? " · créé le " + esc(u.cree) : ""}${u.derniere_connexion ? " · vu le " + esc(quand(u.derniere_connexion)) : ""}</small>${u.matieres.length ? `<small>${esc(listeMat(u.matieres))}</small>` : ""}</div>
+      ${u.id === MOI.id ? `<small style="color:var(--ink-soft)">Toi</small>` : `
+      <span class="acts"><button class="mini" data-role="${esc(u.id)}">${u.role === "admin" ? "→ Prof" : "→ Admin"}</button>
+      <button class="mini" data-reset="${esc(u.id)}">Nouveau mot de passe</button>
       <button class="mini danger" data-suppr-user="${esc(u.id)}" aria-label="Supprimer">✕</button></span>`}
-    </div>`).join("");
-  } catch (err) { zone.innerHTML = ""; $("#msg-users").className = "msg err"; $("#msg-users").textContent = messageErreur(err); }
-}
-function initialesNom(n) {
-  const m = String(n).replace(/^(m\.|mme|mr|dr|pr)\s+/i, "").split(/\s+/).filter(Boolean);
-  return (m.length > 1 ? m[0][0] + m[1][0] : (m[0] || "?").slice(0, 2)).toUpperCase();
+    </div>`).join("") || `<div class="empty" style="border:0">Aucun compte.</div>`;
+  } catch (err) { zone.innerHTML = ""; message("#msg-users", "err", err.message); }
 }
 
 $("#nu-nom").addEventListener("input", () => { if (!$("#nu-id").dataset.touche) $("#nu-id").value = $("#nu-nom").value.replace(/^(m\.|mme|mr|dr|pr)\.?\s+/i, "").split(/\s+/).map(normId).filter(Boolean).join("."); });
 $("#nu-id").addEventListener("input", () => { $("#nu-id").dataset.touche = "1"; });
-
 $("#user-form").addEventListener("submit", async e => {
   e.preventDefault();
   const nom = $("#nu-nom").value.trim(), id = normId($("#nu-id").value), role = val("role");
-  const msg = $("#msg-users");
-  if (!nom || !id) { msg.className = "msg err"; msg.textContent = "Indique le nom et l'identifiant."; return; }
-  $("#nu-btn").disabled = true; msg.className = "msg"; msg.textContent = "Création du compte…";
+  if (!nom || !id) return message("#msg-users", "err", "Indique le nom et l'identifiant.");
+  $("#nu-btn").disabled = true; message("#msg-users", "", "Création du compte…");
   try {
-    const data = await lireUtilisateurs();
-    if (data.users.some(u => u.id === id)) throw new Error(`L'identifiant « ${id} » existe déjà.`);
-    const mdp = genererMdp();
-    data.users.push({ id, nom, role, cree: new Date().toLocaleDateString("fr-FR"), ...(await chiffrer(TOKEN, id, mdp)) });
-    await ecrireUtilisateurs(data, `👤 Nouveau compte : ${nom} (${id})`);
+    const r = await api("/utilisateurs", { json: { nom, id, role } });
     $("#nu-nom").value = ""; $("#nu-id").value = ""; delete $("#nu-id").dataset.touche;
     await afficherUtilisateurs();
-    montrerAcces(nom, id, mdp, "Compte créé ✓");
-  } catch (err) { msg.className = "msg err"; msg.textContent = messageErreur(err); }
+    montrerAcces(nom, r.id, r.mdp, "Compte créé ✓");
+  } catch (err) { message("#msg-users", "err", err.message); }
   $("#nu-btn").disabled = false;
 });
 
 $("#users").addEventListener("click", async e => {
-  const reset = e.target.closest("[data-reset]"), suppr = e.target.closest("[data-suppr-user]");
-  if (!reset && !suppr) return;
-  const id = (reset || suppr).dataset.reset || (reset || suppr).dataset.supprUser;
-  const msg = $("#msg-users");
+  const reset = e.target.closest("[data-reset]"), suppr = e.target.closest("[data-suppr-user]"), role = e.target.closest("[data-role]");
+  if (!reset && !suppr && !role) return;
+  const id = (reset || suppr || role).dataset.reset || (reset || suppr || role).dataset.supprUser || (reset || suppr || role).dataset.role;
+  const u = USERS.find(x => x.id === id); if (!u) return;
   try {
-    const data = await lireUtilisateurs();
-    const u = data.users.find(x => x.id === id); if (!u) return afficherUtilisateurs();
     if (suppr) {
       if (!confirm(`Supprimer le compte de ${u.nom} ?`)) return;
-      msg.className = "msg"; msg.textContent = "Suppression…";
-      data.users = data.users.filter(x => x.id !== id);
-      await ecrireUtilisateurs(data, `👤 Suppression du compte ${id}`);
-      await afficherUtilisateurs();
-      msg.className = "msg ok"; msg.textContent = `Compte de ${u.nom} supprimé.`;
+      await api("/utilisateurs/" + encodeURIComponent(id), { method: "DELETE" });
+      await afficherUtilisateurs(); message("#msg-users", "ok", `Compte de ${u.nom} supprimé.`);
+    } else if (role) {
+      const nouveau = u.role === "admin" ? "prof" : "admin";
+      if (!confirm(`Passer ${u.nom} en ${nouveau === "admin" ? "administrateur" : "professeur"} ?`)) return;
+      await api(`/utilisateurs/${encodeURIComponent(id)}/modifier`, { json: { role: nouveau } });
+      await afficherUtilisateurs(); message("#msg-users", "ok", `${u.nom} est maintenant ${nouveau === "admin" ? "administrateur" : "professeur"}.`);
     } else {
-      if (!confirm(`Créer un nouveau mot de passe pour ${u.nom} ? L'ancien ne marchera plus.`)) return;
-      msg.className = "msg"; msg.textContent = "Création du mot de passe…";
-      const mdp = genererMdp();
-      Object.assign(u, await chiffrer(TOKEN, id, mdp));
-      await ecrireUtilisateurs(data, `🔑 Nouveau mot de passe pour ${id}`);
-      montrerAcces(u.nom, id, mdp, "Nouveau mot de passe ✓", u.matieres);
+      if (u.actif && !confirm(`Créer un nouveau mot de passe pour ${u.nom} ? L'ancien ne marchera plus.`)) return;
+      const r = await api(`/utilisateurs/${encodeURIComponent(id)}/mdp`, { json: {} });
+      await afficherUtilisateurs();
+      montrerAcces(u.nom, id, r.mdp, "Nouveau mot de passe ✓", u.matieres);
     }
-  } catch (err) { msg.className = "msg err"; msg.textContent = messageErreur(err); }
+  } catch (err) { message("#msg-users", "err", err.message); }
 });
 
-// ── Création de plusieurs comptes ──
+// Création en lot
 const sansTitre = n => String(n).replace(/^(m\.|mr\.?|mme\.?|mlle\.?|dr\.?|pr\.?)\s*/i, "").trim();
 const idDepuisNom = n => sansTitre(n).split(/\s+/).map(normId).filter(Boolean).join(".");
 function analyserImport() {
@@ -709,111 +819,46 @@ function analyserImport() {
 function apercuImport() {
   const liste = analyserImport();
   $("#imp-btn").disabled = !liste.length;
-  const nouveaux = liste.filter(c => !USERS_CACHE.some(u => u.id === c.id)).length;
-  $("#imp-btn").textContent = nouveaux ? `Créer ${nouveaux} compte${nouveaux > 1 ? "s" : ""}` : "Mettre à jour les matières";
+  const nouveaux = liste.filter(c => !USERS.some(u => u.id === c.id)).length;
+  $("#imp-btn").textContent = nouveaux ? `Créer ${nouveaux} compte${nouveaux > 1 ? "s" : ""}` : liste.length ? "Mettre à jour les matières" : "Créer les comptes";
   $("#imp-apercu").innerHTML = liste.length ? `<div class="doclist">${liste.map(c => {
-    const existe = USERS_CACHE.some(u => u.id === c.id);
+    const existe = USERS.some(u => u.id === c.id);
     return `<div class="userrow"><span class="avatar">${esc(initialesNom(c.nom))}</span>
       <div class="p"><b>${esc(c.nom)}</b><small>${esc(c.id)}${c.matieres.length ? " · " + esc(c.matieres.map(m => m.matiere).join(", ")) : ""}</small></div>
       <span class="tag ${existe ? "exist" : ""}">${existe ? "Déjà créé" : "Nouveau"}</span></div>`;
   }).join("")}</div>` : "";
 }
-pills("#p-imp-annee", "imp-annee", ANNEES.map(a => [a, a]), "L2");
-pills("#p-imp-filiere", "imp-filiere", Object.keys(FILIERES).map(f => [f, f]), "MRT");
-$("#imp-txt").value = IMPORT_DEFAUT;
 ["#imp-txt", "#p-imp-annee", "#p-imp-filiere"].forEach(id => $(id).addEventListener(id === "#imp-txt" ? "input" : "change", apercuImport));
-
 $("#imp-btn").addEventListener("click", async () => {
-  const liste = analyserImport(), msg = $("#msg-imp"), btn = $("#imp-btn");
+  const liste = analyserImport(), btn = $("#imp-btn");
   if (!liste.length) return;
-  btn.disabled = true; msg.className = "msg"; msg.textContent = "Préparation…";
+  btn.disabled = true; message("#msg-imp", "", "Création des comptes…");
   try {
-    const data = await lireUtilisateurs(), crees = [];
-    let maj = 0, i = 0;
-    for (const c of liste) {
-      const ex = data.users.find(u => u.id === c.id);
-      if (ex) {
-        const avant = (ex.matieres || []).length;
-        ex.matieres = [...(ex.matieres || [])];
-        c.matieres.forEach(m => { if (!ex.matieres.some(x => x.matiere === m.matiere && x.annee === m.annee && x.filiere === m.filiere)) ex.matieres.push(m); });
-        if (ex.matieres.length !== avant) maj++;
-        continue;
-      }
-      msg.textContent = `Création du compte ${++i} : ${c.nom}…`;
-      const mdp = genererMdp();
-      data.users.push({ id: c.id, nom: c.nom, role: "prof", matieres: c.matieres, cree: new Date().toLocaleDateString("fr-FR"), ...(await chiffrer(TOKEN, c.id, mdp)) });
-      crees.push({ ...c, mdp });
-    }
-    if (!crees.length && !maj) { msg.className = "msg ok"; msg.textContent = "Tous ces comptes existent déjà, rien à changer."; btn.disabled = false; return; }
-    msg.textContent = "Enregistrement…";
-    await ecrireUtilisateurs(data, crees.length ? `👤 ${crees.length} nouveau${crees.length > 1 ? "x" : ""} compte${crees.length > 1 ? "s" : ""} (${val("imp-annee")} ${val("imp-filiere")})` : "👤 Mise à jour des matières");
+    const r = await api("/utilisateurs/lot", { json: { comptes: liste } });
     await afficherUtilisateurs();
-    if (!crees.length) { msg.className = "msg ok"; msg.textContent = `Matières mises à jour pour ${maj} compte${maj > 1 ? "s" : ""}.`; btn.disabled = false; return; }
-    const tout = crees.map(c => `${c.nom} — ${listeMat(c.matieres)}\nIdentifiant : ${c.id}\nMot de passe : ${c.mdp}`).join("\n\n");
-    msg.className = "msg ok";
-    msg.innerHTML = `<b>${crees.length} compte${crees.length > 1 ? "s" : ""} créé${crees.length > 1 ? "s" : ""} ✓</b> Copie le message de chaque prof et envoie-le-lui. <b>Les mots de passe ne seront plus affichés</b> après avoir quitté la page.
-      <div class="doclist recap" style="margin-top:10px;background:var(--paper)">${crees.map((c, k) => `<div class="userrow">
+    if (!r.crees.length) { message("#msg-imp", "ok", r.maj ? `Matières mises à jour pour ${r.maj} compte(s).` : "Tous ces comptes existent déjà, rien à changer."); btn.disabled = false; return; }
+    const tout = r.crees.map(c => `${c.nom} — ${listeMat(c.matieres)}\nIdentifiant : ${c.id}\nMot de passe : ${c.mdp}`).join("\n\n");
+    const box = message("#msg-imp", "ok", "");
+    box.innerHTML = `<b>${r.crees.length} compte(s) créé(s) ✓</b> Copie le message de chaque prof et envoie-le-lui. <b>Les mots de passe ne seront plus affichés</b> après avoir quitté la page.
+      <div class="doclist recap" style="margin-top:10px;background:var(--paper)">${r.crees.map((c, k) => `<div class="userrow">
         <span class="avatar">${esc(initialesNom(c.nom))}</span>
         <div class="p" style="color:var(--ink)"><b>${esc(c.nom)}</b><small>${esc(listeMat(c.matieres))}</small>
           <small style="margin-top:4px">Identifiant : <code>${esc(c.id)}</code> · Mot de passe : <code>${esc(c.mdp)}</code></small></div>
         <span class="acts"><button class="mini" data-copier="${k}">Copier le message</button></span></div>`).join("")}</div>
       <div class="links"><button class="btn ghost" id="copier-tout">Copier tous les accès</button></div>`;
-    msg.querySelectorAll("[data-copier]").forEach(b => b.addEventListener("click", () => { const c = crees[+b.dataset.copier]; copier(texteAcces(c.nom, c.id, c.mdp, c.matieres), b); }));
+    box.querySelectorAll("[data-copier]").forEach(b => b.addEventListener("click", () => { const c = r.crees[+b.dataset.copier]; copier(texteAcces(c.nom, c.id, c.mdp, c.matieres), b); }));
     $("#copier-tout").addEventListener("click", () => copier(tout, $("#copier-tout")));
-  } catch (err) { msg.className = "msg err"; msg.textContent = messageErreur(err); }
+    $("#imp-txt").value = ""; apercuImport();
+  } catch (err) { message("#msg-imp", "err", err.message); }
   btn.disabled = false;
 });
 
-// ── Matières du prof connecté : présélection ──
-function choisirMatiere(m) {
-  const ra = document.getElementById("annee-" + m.annee), rf = document.getElementById("filiere-" + m.filiere);
-  if (ra) ra.checked = true;
-  if (rf) rf.checked = true;
-  majMatieres();
-  const opts = [...$("#matiere").options].map(o => o.value);
-  const trouve = opts.find(o => o !== "__new" && norm(o) === norm(m.matiere));
-  if (trouve) { $("#matiere").value = trouve; $("#matiere-new").value = ""; }
-  else { $("#matiere").value = "__new"; $("#matiere-new").value = m.matiere; }
-  majNouvelle();
-}
-function afficherMesMatieres() {
-  const ms = (SESSION && SESSION.matieres) || [];
-  $("#mes-mat").classList.toggle("hidden", !ms.length);
-  if (!ms.length) return;
-  $("#mes-mat").innerHTML = (ms.length > 1 ? "Tes matières :" : "Ta matière :") + ms.map((m, i) => ` <button type="button" data-mamat="${i}">${esc(m.matiere)} · ${esc(m.annee)} ${esc(m.filiere)}</button>`).join("");
-  choisirMatiere(ms[0]);
-}
-$("#mes-mat").addEventListener("click", e => { const b = e.target.closest("[data-mamat]"); if (b) choisirMatiere(SESSION.matieres[+b.dataset.mamat]); });
-
-// ── Fichiers JSON du dépôt ──
-const CONFIG_FILE = "site-config.json";
-async function lireJSON(chemin, defaut) {
-  try { const f = await gh(`/contents/${encodeURI(chemin)}?ref=${CONF.branch}`); return JSON.parse(dec.decode(unb64(f.content.replace(/\s/g, "")))); }
-  catch (e) { if (e.status === 404) return defaut; throw e; }
-}
-async function ecrireJSON(chemin, data, message) {
-  const blob = await gh("/git/blobs", { method: "POST", body: JSON.stringify({ content: JSON.stringify(data, null, 2) + "\n", encoding: "utf-8" }) });
-  await commit([{ path: chemin, sha: blob.sha }], message);
-}
-
-// ── Réglages du site ──
-let REGLAGES = {};
-const DEFAUTS = { maintenance: false, message: "", nouveau_jours: 14, signature: "", mot_de_passe: { actif: false, login: "", mdp: "" },
-  surprise: { actif: false, nom: "Bachir", titre: "Bachir, t'es une légende ! 🏆", message: "" }, noms_matieres: {} };
-function afficherEtat() {
-  const e = $("#etat-site");
-  const off = REGLAGES.maintenance;
-  e.className = "etat " + (off ? "off" : "on");
-  e.innerHTML = (off ? "Site en maintenance" : (REGLAGES.mot_de_passe && REGLAGES.mot_de_passe.actif ? "Site en ligne · protégé par mot de passe" : "Site en ligne")) + `<small id="etat-pub"></small>`;
-  gh(`/actions/runs?branch=${CONF.branch}&per_page=1`).then(r => {
-    const run = r.workflow_runs && r.workflow_runs[0]; if (!run || !$("#etat-pub")) return;
-    $("#etat-pub").textContent = run.status !== "completed" ? "Publication en cours…" : run.conclusion === "success" ? "Publié ✓" : "Dernière publication échouée";
-  }).catch(() => {});
-}
+// ── Réglages ──
+let REGLAGES = null;
 async function chargerReglages() {
   try {
-    const c = await lireJSON(CONFIG_FILE, {});
-    REGLAGES = { ...DEFAUTS, ...c, mot_de_passe: { ...DEFAUTS.mot_de_passe, ...(c.mot_de_passe || {}) }, surprise: { ...DEFAUTS.surprise, ...(c.surprise || {}) }, noms_matieres: { ...(c.noms_matieres || {}) } };
+    const d = await api("/reglages");
+    REGLAGES = d.site;
     $("#r-maintenance").checked = !!REGLAGES.maintenance;
     $("#r-mdp-actif").checked = !!REGLAGES.mot_de_passe.actif;
     $("#r-login").value = REGLAGES.mot_de_passe.login || "";
@@ -827,8 +872,17 @@ async function chargerReglages() {
     if (![...$("#r-nouveau").options].some(o => o.value === nj)) $("#r-nouveau").insertAdjacentHTML("beforeend", `<option value="${esc(nj)}">${esc(nj)} jours</option>`);
     $("#r-nouveau").value = nj;
     $("#r-signature").value = REGLAGES.signature || "";
-    zonesReglages(); afficherEtat(); afficherMatieresAdmin();
-  } catch (err) { $("#msg-reglages").className = "msg err"; $("#msg-reglages").textContent = messageErreur(err); }
+    zonesReglages(); afficherEtat();
+    const p = d.publication;
+    $("#gh-etat").innerHTML = d.github
+      ? `✅ Relié au dépôt GitHub.${p ? ` Dernière publication : ${p.statut !== "completed" ? "en cours…" : p.resultat === "success" ? "réussie" : "échouée"} (${esc(quand(p.quand))}).` : ""}`
+      : `⚠️ Pas encore relié : l'ajout et la suppression de fichiers ne marchent pas. Colle un jeton GitHub ci-dessous.`;
+  } catch (err) { message("#msg-reglages", "err", err.message); }
+}
+function afficherEtat() {
+  const e = $("#etat-site"), off = REGLAGES.maintenance;
+  e.className = "etat " + (off ? "off" : "on");
+  e.textContent = off ? "Site en maintenance" : REGLAGES.mot_de_passe.actif ? "Site en ligne · protégé par mot de passe" : "Site en ligne";
 }
 function zonesReglages() {
   $("#r-mdp-zone").classList.toggle("hidden", !$("#r-mdp-actif").checked);
@@ -838,312 +892,152 @@ function zonesReglages() {
 $("#r-maintenance").addEventListener("change", e => {
   if (e.target.checked && !confirm("Fermer le site aux visiteurs (mode maintenance) ? Pense à cliquer sur « Enregistrer les réglages ».")) e.target.checked = false;
 });
-
 $("#reglages-form").addEventListener("submit", async e => {
   e.preventDefault();
-  const msg = $("#msg-reglages"), btn = $("#r-btn");
-  if ($("#r-mdp-actif").checked && (!$("#r-login").value.trim() || !$("#r-mdp").value.trim())) { msg.className = "msg err"; msg.textContent = "Indique l'identifiant et le mot de passe du site."; return; }
-  if ($("#r-sur-actif").checked && !$("#r-sur-nom").value.trim()) { msg.className = "msg err"; msg.textContent = "Indique le prénom pour le bouton surprise."; return; }
-  btn.disabled = true; msg.className = "msg"; msg.textContent = "Enregistrement…";
+  if ($("#r-mdp-actif").checked && (!$("#r-login").value.trim() || !$("#r-mdp").value.trim())) return message("#msg-reglages", "err", "Indique l'identifiant et le mot de passe du site.");
+  if ($("#r-sur-actif").checked && !$("#r-sur-nom").value.trim()) return message("#msg-reglages", "err", "Indique le prénom pour le bouton surprise.");
+  $("#r-btn").disabled = true; message("#msg-reglages", "", "Enregistrement…");
   try {
-    const actuel = await lireJSON(CONFIG_FILE, {});   // repart de la version la plus récente
-    const avant = { ...DEFAUTS, ...actuel };
-    const nouveau = { ...actuel,
-      maintenance: $("#r-maintenance").checked,
-      message: $("#r-message").value.trim(),
-      nouveau_jours: +$("#r-nouveau").value,
-      signature: $("#r-signature").value.trim(),
-      mot_de_passe: { actif: $("#r-mdp-actif").checked, login: $("#r-login").value.trim(), mdp: $("#r-mdp").value.trim() },
-      surprise: { actif: $("#r-sur-actif").checked, nom: $("#r-sur-nom").value.trim(), titre: $("#r-sur-titre").value.trim(), message: $("#r-sur-msg").value.trim() } };
-    const changements = [];
-    if (!!avant.maintenance !== nouveau.maintenance) changements.push(nouveau.maintenance ? "maintenance activée" : "site rouvert");
-    if ((avant.mot_de_passe || {}).actif !== nouveau.mot_de_passe.actif) changements.push(nouveau.mot_de_passe.actif ? "mot de passe activé" : "mot de passe désactivé");
-    if ((avant.surprise || {}).actif !== nouveau.surprise.actif) changements.push(nouveau.surprise.actif ? "surprise activée" : "surprise désactivée");
-    await ecrireJSON(CONFIG_FILE, nouveau, "⚙️ Réglages du site" + (changements.length ? " : " + changements.join(", ") : ""));
-    await chargerReglages();
-    msg.className = "msg ok";
-    msg.innerHTML = `<b>Enregistré ✓</b> Le site sera à jour dans 1 à 2 minutes. <span id="suivi"></span>`;
-    suivrePublication();
-  } catch (err) { msg.className = "msg err"; msg.textContent = messageErreur(err); }
-  btn.disabled = false;
+    const d = await api("/reglages", { json: {
+      maintenance: $("#r-maintenance").checked, message: $("#r-message").value, nouveau_jours: +$("#r-nouveau").value, signature: $("#r-signature").value,
+      mot_de_passe: { actif: $("#r-mdp-actif").checked, login: $("#r-login").value, mdp: $("#r-mdp").value },
+      surprise: { actif: $("#r-sur-actif").checked, nom: $("#r-sur-nom").value, titre: $("#r-sur-titre").value, message: $("#r-sur-msg").value },
+    } });
+    REGLAGES = d.site; afficherEtat();
+    message("#msg-reglages", "ok", "Enregistré ✓ C'est déjà en ligne.");
+  } catch (err) { message("#msg-reglages", "err", err.message); }
+  $("#r-btn").disabled = false;
+});
+$("#gh-form").addEventListener("submit", async e => {
+  e.preventDefault();
+  const token = $("#gh-token").value.trim(); if (!token) return;
+  $("#gh-btn").disabled = true; message("#msg-gh", "", "Vérification…");
+  try { await api("/github", { json: { token } }); $("#gh-token").value = ""; MOI.github = true; message("#msg-gh", "ok", "Jeton enregistré ✓"); chargerReglages(); }
+  catch (err) { message("#msg-gh", "err", err.message); }
+  $("#gh-btn").disabled = false;
 });
 
-// ── Matières : nom affiché et suppression ──
+// ── Matières ──
 function afficherMatieresAdmin() {
-  const zone = $("#matieres-admin"); if (!zone) return;
+  const zone = $("#matieres-admin");
   const groupes = new Map();
-  ARBRE.forEach(x => {
-    const p = x.path.split("/"); if (p.length < 5) return;
-    const cle = `${p[1]}/${p[2]}/${p[3]}`;
-    if (!groupes.has(cle)) groupes.set(cle, { f: p[1], a: p[2], m: p[3], n: 0 });
+  DOCS.forEach(x => {
+    const cle = `${x.filiere}/${x.annee}/${x.matiere}`;
+    if (!groupes.has(cle)) groupes.set(cle, { f: x.filiere, a: x.annee, m: x.matiere, defaut: x.titre_defaut || x.matiere, n: 0 });
     groupes.get(cle).n++;
   });
   const liste = [...groupes.entries()].sort((x, y) => (x[1].a + x[1].f).localeCompare(y[1].a + y[1].f) || x[1].m.localeCompare(y[1].m, "fr"));
   if (!liste.length) { zone.innerHTML = `<div class="empty">Aucune matière pour l'instant.</div>`; return; }
-  const noms = (REGLAGES && REGLAGES.noms_matieres) || {};
   let html = "", courant = "";
   liste.forEach(([cle, g]) => {
     const titre = `${g.a} · ${FILIERES[g.f] || g.f}`;
     if (titre !== courant) { if (courant) html += `</div>`; html += `<div class="groupe-titre">${esc(titre)}</div><div class="doclist">`; courant = titre; }
     html += `<div class="matrow">
-      <div class="p"><input value="${esc(noms[cle] || g.m)}" data-nom="${esc(cle)}" data-defaut="${esc(g.m)}" aria-label="Nom affiché">
-        <small>${g.n} fichier${g.n > 1 ? "s" : ""}${noms[cle] ? " · dossier « " + esc(g.m) + " »" : ""}</small></div>
-      <button class="mini danger" data-suppr-mat="${esc(cle)}">Supprimer</button>
-    </div>`;
+      <div class="p"><input value="${esc(NOMS[cle] || g.defaut)}" data-nom="${esc(cle)}" data-defaut="${esc(g.defaut)}" aria-label="Nom affiché">
+        <small>${g.n} fichier${g.n > 1 ? "s" : ""} · dossier « ${esc(g.m)} »</small></div>
+      <button class="mini danger" data-suppr-mat="${esc(cle)}">Supprimer</button></div>`;
   });
   zone.innerHTML = html + `</div>`;
 }
-
 $("#matieres-admin").addEventListener("keydown", e => { if (e.key === "Enter" && e.target.matches("[data-nom]")) { e.preventDefault(); e.target.blur(); } });
 $("#matieres-admin").addEventListener("change", async e => {
   const inp = e.target.closest("[data-nom]"); if (!inp) return;
-  const cle = inp.dataset.nom, nom = inp.value.replace(/\s+/g, " ").trim(), msg = $("#msg-matieres");
-  msg.className = "msg"; msg.textContent = "Enregistrement…";
+  message("#msg-matieres", "", "Enregistrement…");
   try {
-    const c = await lireJSON(CONFIG_FILE, {});
-    c.noms_matieres = c.noms_matieres || {};
-    if (!nom || nom === inp.dataset.defaut) delete c.noms_matieres[cle]; else c.noms_matieres[cle] = nom;
-    await ecrireJSON(CONFIG_FILE, c, `✏️ Nom affiché : ${cle.split("/")[2]} → ${nom || inp.dataset.defaut}`);
-    REGLAGES.noms_matieres = c.noms_matieres;
-    afficherMatieresAdmin();
-    msg.className = "msg ok"; msg.textContent = `Renommé ✓ « ${nom || inp.dataset.defaut} » sera affiché sur le site dans 1 à 2 minutes.`;
-  } catch (err) { msg.className = "msg err"; msg.textContent = messageErreur(err); }
+    const r = await api("/matieres/nom", { json: { cle: inp.dataset.nom, nom: inp.value, defaut: inp.dataset.defaut } });
+    NOMS = r.noms_matieres; afficherMatieresAdmin(); majMatieres();
+    message("#msg-matieres", "ok", `Renommé ✓ C'est déjà en ligne.`);
+  } catch (err) { message("#msg-matieres", "err", err.message); }
 });
-
 $("#matieres-admin").addEventListener("click", async e => {
   const b = e.target.closest("[data-suppr-mat]"); if (!b) return;
-  const cle = b.dataset.supprMat, [f, a, m] = cle.split("/"), msg = $("#msg-matieres");
-  const fichiers = ARBRE.filter(x => x.path.startsWith(`cours/${cle}/`));
-  const saisie = prompt(`Supprimer « ${m} » (${a} ${f}) et ses ${fichiers.length} fichier(s) ?\n\nPour confirmer, tape : SUPPRIMER`);
+  const cle = b.dataset.supprMat, [f, a, m] = cle.split("/");
+  const n = DOCS.filter(x => `${x.filiere}/${x.annee}/${x.matiere}` === cle).length;
+  const saisie = prompt(`Supprimer « ${m} » (${a} ${f}) et ses ${n} fichier(s) ?\n\nPour confirmer, tape : SUPPRIMER`);
   if ((saisie || "").trim().toUpperCase() !== "SUPPRIMER") return;
-  msg.className = "msg"; msg.textContent = "Suppression…"; b.disabled = true;
+  message("#msg-matieres", "", "Suppression…"); b.disabled = true;
   try {
-    await commit(fichiers.map(x => ({ path: x.path, sha: null })), `🗑 Suppression de la matière ${m} (${a} ${f})`);
-    await chargerArbre(); afficherMatieresAdmin(); majMatieres();
-    msg.className = "msg ok"; msg.textContent = `« ${m} » supprimée. Le site sera à jour dans 1 à 2 minutes. (GitHub garde une copie dans l'historique.)`;
-  } catch (err) { msg.className = "msg err"; msg.textContent = messageErreur(err); b.disabled = false; }
+    await api("/matieres/supprimer", { json: { cle } });
+    await chargerDocuments(); afficherMatieresAdmin(); majMatieres();
+    message("#msg-matieres", "ok", `« ${m} » supprimée. Une sauvegarde a été faite juste avant, et GitHub garde une copie des fichiers.`);
+  } catch (err) { message("#msg-matieres", "err", err.message); b.disabled = false; }
 });
 
-// ── Changer mon mot de passe ──
+// ── Sauvegardes ──
+const TYPES_SV = { manuelle: "Manuelle", auto: "Automatique", "avant-restauration": "Avant restauration", "avant-suppression": "Avant suppression" };
+async function chargerSauvegardes() {
+  try {
+    const d = await api("/sauvegardes");
+    const der = d.sauvegardes[0];
+    $("#sv-etat").className = "etat " + (der && Date.now() - der.quand < 7 * 864e5 ? "on" : "off");
+    $("#sv-etat").textContent = (der ? `Dernière sauvegarde : ${quand(der.quand)}` : "Aucune sauvegarde pour l'instant")
+      + ` · ${d.contenu.utilisateurs} compte(s), ${d.contenu.documents} document(s)`;
+    $("#sv-liste").innerHTML = d.sauvegardes.map(s => `<div class="docrow">
+      <div class="p">${esc(quand(s.quand))} <span class="role ${s.type === "manuelle" ? "admin" : ""}">${esc(TYPES_SV[s.type] || s.type)}</span>
+        <small>${esc(s.note || "")}${s.qui ? " · " + esc(s.qui) : ""} · ${taille(s.taille || 0)}</small></div>
+      <span class="acts" style="display:flex;gap:6px">
+        <a class="mini" href="/api/sauvegardes/${s.id}" style="text-decoration:none;color:inherit">⬇️</a>
+        <button class="mini" data-restaurer="${s.id}">Restaurer</button>
+        <button class="mini danger" data-suppr-sv="${s.id}" aria-label="Supprimer">✕</button></span></div>`).join("") || `<div class="empty" style="border:0">Aucune sauvegarde.</div>`;
+  } catch (err) { message("#msg-sv", "err", err.message); }
+}
+$("#sv-creer").addEventListener("click", async () => {
+  $("#sv-creer").disabled = true; message("#msg-sv", "", "Sauvegarde…");
+  try { const r = await api("/sauvegardes", { json: { note: $("#sv-note").value } }); $("#sv-note").value = ""; message("#msg-sv", "ok", `Sauvegarde n°${r.id} créée ✓ (${taille(r.taille)})`); chargerSauvegardes(); }
+  catch (err) { message("#msg-sv", "err", err.message); }
+  $("#sv-creer").disabled = false;
+});
+$("#sv-liste").addEventListener("click", async e => {
+  const r = e.target.closest("[data-restaurer]"), s = e.target.closest("[data-suppr-sv]");
+  if (!r && !s) return;
+  try {
+    if (r) {
+      if (!confirm("Remettre les comptes, réglages et la liste des documents comme dans cette sauvegarde ?\n\nL'état actuel sera d'abord sauvegardé, tu pourras revenir en arrière.")) return;
+      message("#msg-sv", "", "Restauration…");
+      await api(`/sauvegardes/${r.dataset.restaurer}/restaurer`, { json: {} });
+      message("#msg-sv", "ok", "Restauré ✓");
+      await chargerDocuments(); majMatieres(); chargerSauvegardes();
+    } else {
+      if (!confirm("Supprimer définitivement cette sauvegarde ?")) return;
+      await api(`/sauvegardes/${s.dataset.supprSv}`, { method: "DELETE" });
+      chargerSauvegardes();
+    }
+  } catch (err) { message("#msg-sv", "err", err.message); }
+});
+$("#sv-fichier").addEventListener("change", async e => {
+  const f = e.target.files[0]; e.target.value = ""; if (!f) return;
+  let contenu;
+  try { contenu = JSON.parse(await f.text()); } catch (err) { return message("#msg-sv-fichier", "err", "Ce fichier n'est pas lisible."); }
+  if (!confirm(`Restaurer la sauvegarde « ${f.name} » ?\n\nL'état actuel sera d'abord sauvegardé.`)) return;
+  message("#msg-sv-fichier", "", "Restauration…");
+  try { await api("/restaurer", { brut: JSON.stringify(contenu) }); message("#msg-sv-fichier", "ok", "Restauré ✓"); await chargerDocuments(); majMatieres(); chargerSauvegardes(); }
+  catch (err) { message("#msg-sv-fichier", "err", err.message); }
+});
+
+// ── Journal ──
+async function chargerJournal() {
+  const zone = $("#journal");
+  zone.innerHTML = `<div class="empty" style="border:0">Chargement…</div>`;
+  try {
+    const d = await api("/journal");
+    zone.innerHTML = d.journal.map(j => `<div class="docrow"><div class="p">${esc(j.action)}<small>${esc(quand(j.quand))} · ${esc(j.qui || "—")}${j.details ? " · " + esc(j.details) : ""}</small></div></div>`).join("")
+      || `<div class="empty" style="border:0">Rien pour l'instant.</div>`;
+  } catch (err) { zone.innerHTML = `<div class="empty" style="border:0">${esc(err.message)}</div>`; }
+}
+
+// ── Mon mot de passe ──
 $("#mdp-form").addEventListener("submit", async e => {
   e.preventDefault();
-  const m1 = $("#mdp1").value, m2 = $("#mdp2").value, msg = $("#msg-mdp");
-  if (m1.length < 8) { msg.className = "msg err"; msg.textContent = "8 caractères minimum."; return; }
-  if (m1 !== m2) { msg.className = "msg err"; msg.textContent = "Les deux mots de passe ne sont pas identiques."; return; }
-  $("#mdp-btn").disabled = true; msg.className = "msg"; msg.textContent = "Enregistrement…";
-  try {
-    const data = await lireUtilisateurs();
-    const u = data.users.find(x => x.id === SESSION.id);
-    if (!u) throw new Error("Ce compte n'existe plus.");
-    Object.assign(u, await chiffrer(TOKEN, u.id, m1));
-    await ecrireUtilisateurs(data, `🔑 Changement de mot de passe (${u.id})`);
-    $("#mdp1").value = ""; $("#mdp2").value = "";
-    msg.className = "msg ok"; msg.textContent = "Mot de passe changé ✓ Il fonctionnera dans 1 à 2 minutes, le temps que le site se mette à jour.";
-  } catch (err) { msg.className = "msg err"; msg.textContent = messageErreur(err); }
+  const m1 = $("#mdp1").value, m2 = $("#mdp2").value;
+  if (m1.length < 8) return message("#msg-mdp", "err", "8 caractères minimum.");
+  if (m1 !== m2) return message("#msg-mdp", "err", "Les deux mots de passe ne sont pas identiques.");
+  $("#mdp-btn").disabled = true; message("#msg-mdp", "", "Enregistrement…");
+  try { await api("/moi/mdp", { json: { nouveau: m1 } }); $("#mdp1").value = ""; $("#mdp2").value = ""; message("#msg-mdp", "ok", "Mot de passe changé ✓"); }
+  catch (err) { message("#msg-mdp", "err", err.message); }
   $("#mdp-btn").disabled = false;
 });
 
-// ── Formulaire ──
-function pills(id, nom, options, defaut) {
-  $(id).innerHTML = options.map(([v, label]) =>
-    `<input type="radio" name="${nom}" id="${nom}-${esc(v)}" value="${esc(v)}" ${v === defaut ? "checked" : ""}><label for="${nom}-${esc(v)}">${esc(label)}</label>`).join("");
-}
-pills("#p-annee", "annee", ANNEES.map(a => [a, a]), "L2");
-pills("#p-filiere", "filiere", Object.keys(FILIERES).map(f => [f, f]), "GI");
-pills("#p-type", "type", TYPES, "Cours");
-pills("#p-role", "role", [["prof", "Professeur"], ["admin", "Administrateur"]], "prof");
-const val = nom => (document.querySelector(`input[name="${nom}"]:checked`) || {}).value;
-
-function matieresExistantes(a, f) {
-  const s = new Set();
-  ARBRE.forEach(x => { const p = x.path.split("/"); if (p[1] === f && p[2] === a && p.length > 4) s.add(p[3]); });
-  return [...s].sort((x, y) => x.localeCompare(y, "fr"));
-}
-
-function majMatieres() {
-  const ms = matieresExistantes(val("annee"), val("filiere"));
-  const avant = $("#matiere").value;
-  $("#matiere").innerHTML = ms.map(m => `<option value="${esc(m)}">${esc(m)}</option>`).join("") + `<option value="__new">+ Nouvelle matière…</option>`;
-  $("#matiere").value = ms.includes(avant) ? avant : (ms[0] || "__new");
-  majNouvelle();
-}
-
-function majNouvelle() {
-  const nouvelle = $("#matiere").value === "__new";
-  $("#matiere-new").classList.toggle("hidden", !nouvelle);
-  majDestination(); majGestion();
-}
-
-function matiereChoisie() {
-  return $("#matiere").value === "__new" ? propre($("#matiere-new").value) : $("#matiere").value;
-}
-
-// Réutilise le dossier existant de la matière (ex : « Td » plutôt que créer « TD » à côté)
-function dossierType() {
-  const t = val("type"), a = val("annee"), f = val("filiere"), m = matiereChoisie();
-  const existants = new Set();
-  ARBRE.forEach(x => { const p = x.path.split("/"); if (p[1] === f && p[2] === a && p[3] === m && p.length > 5) existants.add(p[4]); });
-  for (const d of existants) if (norm(d) === norm(t) || (t === "Sujets" && norm(d).startsWith("sujet"))) return d;
-  return t;
-}
-
-function cheminDossier() {
-  const m = matiereChoisie();
-  return m ? `cours/${val("filiere")}/${val("annee")}/${m}/${dossierType()}` : "";
-}
-
-function majDestination() {
-  const d = cheminDossier();
-  $("#dest").innerHTML = d ? `Destination : <code>${esc(d)}/</code>` : `<span style="color:var(--accent)">Indique le nom de la matière.</span>`;
-  majListe();
-}
-
-["#p-annee", "#p-filiere"].forEach(id => $(id).addEventListener("change", majMatieres));
-$("#p-type").addEventListener("change", majDestination);
-$("#matiere").addEventListener("change", majNouvelle);
-$("#matiere-new").addEventListener("input", () => { majDestination(); majGestion(); });
-
-// ── Fichiers ──
-function ajouterFichiers(liste) {
-  for (const file of liste) {
-    if (SELECTION.some(s => s.file === file)) continue;
-    SELECTION.push({ file, nom: propre(file.name) });
-  }
-  majListe();
-}
-$("#fichiers").addEventListener("change", e => { ajouterFichiers(e.target.files); e.target.value = ""; });
-const drop = $("#drop");
-["dragenter", "dragover"].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add("over"); }));
-["dragleave", "drop"].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove("over"); }));
-drop.addEventListener("drop", e => ajouterFichiers(e.dataTransfer.files));
-
-function majListe() {
-  const dossier = cheminDossier();
-  $("#liste").innerHTML = SELECTION.map((s, i) => {
-    const ext = (s.nom.split(".").pop() || "").toUpperCase();
-    const trop = s.file.size > TAILLE_MAX;
-    const existe = dossier && ARBRE.some(x => x.path === `${dossier}/${s.nom}`);
-    const info = trop ? `<small class="warn">Trop lourd (max 25 Mo) — compresse-le d\u2019abord</small>`
-               : existe ? `<small class="warn">${taille(s.file.size)} · remplacera le fichier existant</small>`
-               : `<small>${taille(s.file.size)}</small>`;
-    return `<div class="file">
-      <span class="ext">${esc(ext.slice(0, 4))}</span>
-      <div class="name"><input value="${esc(s.nom)}" data-i="${i}" aria-label="Nom du fichier">${info}</div>
-      <span class="state" id="st-${i}"></span>
-      <button class="x" data-del="${i}" title="Retirer" aria-label="Retirer">✕</button>
-    </div>`;
-  }).join("");
-  const valides = SELECTION.filter(s => s.file.size <= TAILLE_MAX && s.nom);
-  $("#publier").disabled = !valides.length || !dossier;
-  $("#publier").textContent = valides.length ? `Publier ${valides.length} fichier${valides.length > 1 ? "s" : ""}` : "Publier";
-}
-$("#liste").addEventListener("change", e => {
-  const i = e.target.dataset.i; if (i === undefined) return;
-  const ancien = SELECTION[i].nom, nouveau = propre(e.target.value);
-  const ext = ancien.includes(".") ? "." + ancien.split(".").pop() : "";
-  SELECTION[i].nom = !nouveau ? ancien : (ext && !nouveau.toLowerCase().endsWith(ext.toLowerCase()) ? nouveau + ext : nouveau);
-  majListe();
-});
-$("#liste").addEventListener("click", e => {
-  const b = e.target.closest("[data-del]"); if (!b) return;
-  SELECTION.splice(+b.dataset.del, 1); majListe();
-});
-
-// ── Publication ──
-function lienSite() {
-  const base = location.href.replace(/admin\.html.*$/, "");
-  const m = matiereChoisie();
-  return base + "#/" + [val("annee"), val("filiere"), m].map(encodeURIComponent).join("/");
-}
-
-$("#publier").addEventListener("click", async () => {
-  const dossier = cheminDossier();
-  const aEnvoyer = SELECTION.map((s, i) => ({ ...s, i })).filter(s => s.file.size <= TAILLE_MAX && s.nom);
-  if (!dossier || !aEnvoyer.length) return;
-  const btn = $("#publier"), msg = $("#msg");
-  btn.disabled = true; msg.className = "msg"; msg.textContent = "Envoi des fichiers…";
-  try {
-    const entrees = [];
-    for (const s of aEnvoyer) {
-      const st = $("#st-" + s.i); if (st) { st.className = "state"; st.textContent = "…"; }
-      const blob = await gh("/git/blobs", { method: "POST", body: JSON.stringify({ content: await lireBase64(s.file), encoding: "base64" }) });
-      entrees.push({ path: `${dossier}/${s.nom}`, sha: blob.sha });
-      if (st) { st.className = "state ok"; st.textContent = "✓"; }
-    }
-    msg.textContent = "Enregistrement dans le dépôt…";
-    const noms = aEnvoyer.map(s => s.nom);
-    await commit(entrees, `📚 Ajout ${noms.length > 1 ? noms.length + " fichiers" : noms[0]} — ${val("annee")} ${val("filiere")} ${matiereChoisie()} (${val("type")})`);
-    const site = lienSite();
-    SELECTION = [];
-    await chargerArbre();
-    if ($("#matiere").value === "__new") { const m = matiereChoisie(); majMatieres(); $("#matiere").value = m; $("#matiere-new").value = ""; majNouvelle(); }
-    else { majDestination(); majGestion(); }
-    if (estAdmin()) afficherMatieresAdmin();
-    msg.className = "msg ok";
-    msg.innerHTML = `<b>Publié ✓</b> Le site sera à jour dans 1 à 2 minutes. <span id="suivi"></span>
-      <div class="links"><a class="btn ghost" href="${esc(site)}" target="_blank" rel="noopener">Voir sur le site</a>
-      <a class="btn ghost" href="https://github.com/${CONF.owner}/${CONF.repo}/actions" target="_blank" rel="noopener">Suivre la publication</a></div>`;
-    suivrePublication();
-  } catch (err) {
-    msg.className = "msg err"; msg.textContent = messageErreur(err);
-    majListe();
-  }
-});
-
-// Suivi facultatif (nécessite la permission Actions : Read-only sur le jeton)
-async function suivrePublication() {
-  const el = () => $("#suivi");
-  for (let i = 0; i < 40; i++) {
-    await new Promise(r => setTimeout(r, i ? 8000 : 4000));
-    if (!el()) return;
-    try {
-      const runs = await gh(`/actions/runs?branch=${CONF.branch}&per_page=1`);
-      const run = runs.workflow_runs && runs.workflow_runs[0];
-      if (!run) return;
-      if (run.status !== "completed") { el().textContent = "· Publication en cours…"; continue; }
-      el().textContent = run.conclusion === "success" ? "· En ligne ✓" : "· La publication a échoué, regarde l'onglet Actions.";
-      return;
-    } catch (e) { return; }
-  }
-}
-
-// ── Gestion des documents existants ──
-function majGestion() {
-  const a = val("annee"), f = val("filiere"), m = matiereChoisie();
-  $("#gestion-titre").textContent = m ? `Documents · ${m}` : "Documents de la matière";
-  const docs = m ? ARBRE.filter(x => { const p = x.path.split("/"); return p[1] === f && p[2] === a && p[3] === m; }) : [];
-  if (!docs.length) { $("#docs").innerHTML = `<div class="empty">Aucun document en ligne pour cette matière.</div>`; return; }
-  $("#docs").innerHTML = `<div class="doclist">${docs.map(x => {
-    const rel = x.path.split("/").slice(4);
-    const nom = rel.pop();
-    return `<div class="docrow"><div class="p">${esc(nom)}<small>${esc(rel.join(" / ") || "—")} · ${taille(x.size || 0)}</small></div>
-      <button class="x" data-suppr="${esc(x.path)}" title="Supprimer" aria-label="Supprimer">🗑</button></div>`;
-  }).join("")}</div>`;
-}
-
-$("#docs").addEventListener("click", async e => {
-  const b = e.target.closest("[data-suppr]"); if (!b) return;
-  const chemin = b.dataset.suppr, nom = chemin.split("/").pop();
-  if (!confirm(`Supprimer « ${nom} » du site ?`)) return;
-  const msg = $("#msg-gestion"); msg.className = "msg"; msg.textContent = "Suppression…"; b.disabled = true;
-  try {
-    await commit([{ path: chemin, sha: null }], `🗑 Suppression ${nom}`);
-    await chargerArbre(); majGestion(); majListe();
-    msg.className = "msg ok"; msg.textContent = `« ${nom} » supprimé. Le site sera à jour dans 1 à 2 minutes.`;
-  } catch (err) { msg.className = "msg err"; msg.textContent = messageErreur(err); b.disabled = false; }
-});
-
-// ── Démarrage : reconnexion automatique ──
-(async () => {
-  const l = lireSession();
-  if (!l) return;
-  $("#login-msg").textContent = "Reconnexion…";
-  try { await ouvrir(l.session, l.memo); $("#login-msg").textContent = ""; }
-  catch (err) {
-    try { [localStorage, sessionStorage].forEach(st => st.removeItem(SESSION_KEY)); } catch (e) {}
-    SESSION = null; erreurLogin(messageErreur(err));
-  }
-})();
+demarrer();
 </script>
 </body>
 </html>

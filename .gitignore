@@ -1,2 +1,8 @@
 .DS_Store
 **/.DS_Store
+index-complet.html
+maintenance.html
+docs-index.json
+node_modules/
+.wrangler/
+_site/

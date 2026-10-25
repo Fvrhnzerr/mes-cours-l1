@@ -45,12 +45,12 @@ jobs:
       - name: Rassembler les fichiers publiés
         run: |
           mkdir -p _site
-          cp index.html admin.html _site/
-          for f in admin-users.json site-config.json; do [ -f "$f" ] && cp "$f" _site/ || true; done
+          cp index.html index-complet.html maintenance.html docs-index.json admin.html _site/
+          for f in admin-ancien.html admin-users.json site-config.json; do [ -f "$f" ] && cp "$f" _site/ || true; done
           cp -r cours _site/
           find _site -name ".DS_Store" -delete
           # Pas de mise en cache des données qui changent souvent
-          printf '/admin-users.json\n  Cache-Control: no-store\n/index.html\n  Cache-Control: no-cache\n/admin.html\n  Cache-Control: no-cache\n' > _site/_headers
+          printf '/admin-users.json\n  Cache-Control: no-store\n/docs-index.json\n  Cache-Control: no-store\n/index.html\n  Cache-Control: no-cache\n/admin.html\n  Cache-Control: no-cache\n/admin-ancien.html\n  Cache-Control: no-cache\n' > _site/_headers
 
       - name: Cloudflare configuré ?
         id: secrets
@@ -75,18 +75,49 @@ jobs:
     needs: construire
     if: needs.construire.outputs.cloudflare == 'oui'
     runs-on: ubuntu-latest
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: 509f916a38c3f5f0d7055a72d535dcd3
     steps:
+      # Le code du serveur (functions/ et lib/) vient du dépôt, les pages générées de l'étape précédente
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            functions
+            lib
       - uses: actions/download-artifact@v4
         with:
           name: site
           path: _site
-      - name: Publier sur Cloudflare Pages
-        uses: cloudflare/wrangler-action@v3
+      - uses: actions/setup-node@v4
         with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ env.CF_COMPTE }}
-          preCommands: wrangler pages project create ${{ env.CF_PROJET }} --production-branch=main || true
-          command: pages deploy _site --project-name=${{ env.CF_PROJET }} --branch=main --commit-dirty=true
+          node-version: "20"
+      - name: Installer Wrangler
+        run: npm install --no-save wrangler@4
+
+      # Base de données D1 (gratuite) : créée la première fois, puis réutilisée.
+      # Si le jeton Cloudflare n'a pas le droit « D1 : Edit », le site est publié sans base (comme avant).
+      - name: Base de données
+        id: base
+        continue-on-error: true
+        run: |
+          set -e
+          NOM=drive-universitaire-db
+          npx wrangler pages project create "$CF_PROJET" --production-branch=main >/dev/null 2>&1 || true
+          ID=$(npx wrangler d1 list --json | python3 -c "import sys,json; print(next((d['uuid'] for d in json.load(sys.stdin) if d['name']=='$NOM'), ''))")
+          if [ -z "$ID" ]; then
+            npx wrangler d1 create "$NOM"
+            ID=$(npx wrangler d1 list --json | python3 -c "import sys,json; print(next((d['uuid'] for d in json.load(sys.stdin) if d['name']=='$NOM'), ''))")
+          fi
+          [ -n "$ID" ]
+          printf 'name = "%s"\npages_build_output_dir = "_site"\ncompatibility_date = "2025-09-01"\n\n[[d1_databases]]\nbinding = "DB"\ndatabase_name = "%s"\ndatabase_id = "%s"\n' "$CF_PROJET" "$NOM" "$ID" > wrangler.toml
+          cat wrangler.toml
+          echo "ok=oui" >> "$GITHUB_OUTPUT"
+
+      - name: Publier sur Cloudflare Pages
+        run: |
+          [ "${{ steps.base.outputs.ok }}" = "oui" ] || { echo "::warning::Base de données non configurée : vérifie que le jeton Cloudflare a la permission D1 Edit."; rm -f wrangler.toml; }
+          npx wrangler pages deploy _site --project-name="$CF_PROJET" --branch=main --commit-dirty=true
 
   github-pages:
     needs: construire

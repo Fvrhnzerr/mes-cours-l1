@@ -17,6 +17,7 @@ import os
 import re
 import sys
 import json
+import hashlib
 import datetime
 import subprocess
 import unicodedata
@@ -478,8 +479,8 @@ __ANALYTICS__
 </div>
 
 <script>
-const DATA = __DATA__;
-const CFG  = __CONFIG__;
+const DATA = /*DATA*/__DATA__/*/DATA*/;
+const CFG  = /*CFG*/__CONFIG__/*/CFG*/;
 
 const FILIERES = CFG.filieres;
 const ANNEES = [["L1","I","Licence 1"], ["L2","II","Licence 2"], ["L3","III","Licence 3"]];
@@ -786,9 +787,8 @@ def pour_script(obj):
 # 🔍 6. SCAN DU DOSSIER cours/
 # ==========================================
 total_fichiers = 0
-if MODE_MAINTENANCE:
-    html_complet = PAGE_MAINTENANCE.replace("__SIGNATURE__", NOM_SIGNATURE_MAINTENANCE)
-else:
+index_docs = []
+if True:   # la page complète est toujours générée (le serveur s'en sert même en maintenance)
     dates = dates_ajout_git()
     data = {}
 
@@ -825,6 +825,8 @@ else:
                                 "d": dates.get(unicodedata.normalize("NFC", chemin)) or int(os.path.getmtime(chemin)),
                             })
                     total_fichiers += len(docs)
+                    titre_defaut = nom_matiere(matiere)
+                    index_docs.extend({**d, "titre": titre_defaut} for d in docs)
                     data.setdefault(annee, {}).setdefault(filiere, {})[matiere] = {
                         "titre": NOMS_PERSO.get(f"{filiere}/{annee}/{matiere}") or nom_matiere(matiere),
                         "docs": docs,
@@ -850,6 +852,18 @@ else:
 # ==========================================
 # 💾 7. ÉCRITURE DU SITE
 # ==========================================
-with open("index.html", "w", encoding="utf-8") as f:
+# index-complet.html : modèle utilisé par le serveur (functions/_middleware.js) qui y met
+# les documents et réglages à jour depuis la base de données.
+with open("index-complet.html", "w", encoding="utf-8") as f:
     f.write(html_complet)
+# index.html : version statique de secours (GitHub Pages, ou si la base est indisponible)
+with open("index.html", "w", encoding="utf-8") as f:
+    f.write(PAGE_MAINTENANCE.replace("__SIGNATURE__", NOM_SIGNATURE_MAINTENANCE) if MODE_MAINTENANCE else html_complet)
+with open("maintenance.html", "w", encoding="utf-8") as f:
+    f.write(PAGE_MAINTENANCE)
+# docs-index.json : liste des fichiers, relue par le serveur pour remplir la base
+_contenu = json.dumps(index_docs, ensure_ascii=False, sort_keys=True)
+with open("docs-index.json", "w", encoding="utf-8") as f:
+    json.dump({"version": hashlib.sha1(_contenu.encode("utf-8")).hexdigest()[:16], "genere": int(maintenant.timestamp()),
+               "docs": index_docs}, f, ensure_ascii=False)
 print(f"✅ index.html généré ({total_fichiers} fichiers indexés).")
